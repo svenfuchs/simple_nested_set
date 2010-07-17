@@ -16,5 +16,11 @@ Gem::Specification.new do |s|
   s.platform     = Gem::Platform::RUBY
   s.require_path = 'lib'
   s.rubyforge_project = '[none]'
-  s.required_rubygems_version = '>= 1.3.6'
+
+  s.add_dependency             'activerecord', '>= 3.0.0.beta4'
+  s.add_dependency             'activesupport'
+
+  s.add_development_dependency 'database_cleaner'
+  s.add_development_dependency 'test_declarative'
+  s.add_development_dependency 'pathname_local'
 end
