@@ -6,7 +6,9 @@ module SimpleNestedSet
       include SimpleNestedSet::InstanceMethods
       extend SimpleNestedSet::ClassMethods
 
-      # define_callbacks :before_move, :after_move
+      # TODO get callbacks working
+      # define_callbacks :move, :terminator => "result == false"
+      # before_move :init_as_node
 
       before_validation :init_as_node
       before_destroy :prune_branch

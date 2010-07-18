@@ -64,6 +64,12 @@ class SimpleNestedSetTest < Test::Unit::TestCase
     assert_equal [1, 2, 2, 3], levels
   end
 
+  # CALLBACKS
+
+  test "before_move callback gets called" do
+    assert_equal 'foo with before_move callback!', CallbackNode.create!(:name => 'foo').name
+  end
+
 
   # INSTANCE METHODS
 

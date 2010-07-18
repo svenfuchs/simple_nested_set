@@ -19,6 +19,12 @@ class Node < Base
   acts_as_nested_set :scope => :scope_id
 end
 
+class CallbackNode < Base
+  acts_as_nested_set
+  # TODO get callbacks working
+  # before_move { |record| record.name += ' with before_move callback!' }
+end
+
 root      = Node.create!(:name => 'root',      :scope_id => 1, :lft => 1, :rgt => 8)
 child_1   = Node.create!(:name => 'child_1',   :scope_id => 1, :lft => 2, :rgt => 3, :parent => root)
 child_2   = Node.create!(:name => 'child_2',   :scope_id => 1, :lft => 4, :rgt => 7, :parent => root)

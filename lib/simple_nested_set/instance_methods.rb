@@ -241,7 +241,8 @@ module SimpleNestedSet
       end
 
       def move_to(target, position)
-        # return if callback(:before_move) == false
+        # return if _run_before_move_callbacks == false
+
         transaction do
           target.reload_nested_set if target.is_a?(nested_set.klass)
           self.reload_nested_set
@@ -301,6 +302,8 @@ module SimpleNestedSet
 
           target.reload_nested_set if target
           reload_nested_set
+
+          # _run_after_move_callbacks
         end
       end
 
