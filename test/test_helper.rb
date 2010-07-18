@@ -16,9 +16,9 @@ config = { 'adapter' => 'sqlite3', 'database' => ':memory:' }
 ActiveRecord::Base.configurations = { 'test' =>  config }
 ActiveRecord::Base.establish_connection(config)
 
-log_file = '/tmp/simple_nested_set_test.log'
-FileUtils.touch(log_file) unless File.exists?(log_file)
-ActiveRecord::Base.logger = Logger.new(log_file)
+log = '/tmp/simple_nested_set_test.log'
+FileUtils.touch(log) unless File.exists?(log)
+ActiveRecord::Base.logger = Logger.new(log) # hu, why doesn't it log any queries?
 
 class Test::Unit::TestCase
   def setup

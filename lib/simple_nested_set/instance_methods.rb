@@ -50,11 +50,11 @@ module SimpleNestedSet
     def parent
       nested_set.klass.find(parent_id) unless root?
     end
-    
+
     def ancestor_of?(other)
       lft < other.lft && rgt > other.rgt
     end
-    
+
     def self_or_ancestor_of?(other)
       self == other || ancestor_of?(other)
     end
@@ -68,11 +68,11 @@ module SimpleNestedSet
     def self_and_ancestors
       ancestors + [self]
     end
-    
+
     def descendent_of?(other)
       lft > other.lft && rgt < other.rgt
     end
-    
+
     def self_or_descendent_of?(other)
       self == other || descendent_of?(other)
     end
@@ -92,10 +92,10 @@ module SimpleNestedSet
       rgt > lft ? (rgt - lft - 1) / 2 : 0
     end
 
-    # Returns a set of only this entry's immediate children
-    def children
-      rgt - lft == 1 ? []  : nested_set.scoped(:conditions => { :parent_id => id })
-    end
+    # # Returns a set of only this entry's immediate children
+    # def children
+    #   rgt - lft == 1 ? []  : nested_set.scoped(:conditions => { :parent_id => id })
+    # end
 
     # Returns a set of only this entry's immediate children including self
     def self_and_children
@@ -106,7 +106,7 @@ module SimpleNestedSet
     def children?
       descendents_count > 0
     end
-    alias has_children? children
+    alias has_children? children?
 
     # Returns the array of all children of the parent, except self
     def siblings
@@ -139,11 +139,11 @@ module SimpleNestedSet
     def move_to_child_of(node)
       node ? move_to(node, :child) : move_to_root
     end
-    
+
     def move_to_root
       move_to(nil, :root)
     end
-    
+
     # moves the node to the left of its left sibling if any
     def move_left
       move_to_left_of(left_sibling) if left_sibling
@@ -173,7 +173,7 @@ module SimpleNestedSet
       def without_self(scope)
         scope.scoped :conditions => ["#{self.class.table_name}.id <> ?", id]
       end
-      
+
       # before validation set lft and rgt to the end of the tree
       def init_as_node
         if lft.nil? || rgt.nil?
@@ -281,7 +281,6 @@ module SimpleNestedSet
             else          target.parent_id
           end
 
-          # update and that rules
           sql = <<-sql
             lft = CASE
               WHEN lft BETWEEN :a AND :b THEN lft + :d - :b
@@ -310,7 +309,7 @@ module SimpleNestedSet
         impossible_move!("Position must be one of #{positions.inspect} but is #{position.inspect}.") unless positions.include?(position)
         impossible_move!("A new node can not be moved") if new_record?
         impossible_move!("A node can't be moved to itself") if self == target
-        impossible_move!("A node can't be moved to a descendant of itself.") if (lft..rgt).include?(target.lft..target.rgt)
+        impossible_move!("A node can't be moved to a descendant of itself.") if (lft..rgt).include?(target.lft) && (lft..rgt).include?(target.rgt)
         impossible_move!("A node can't be moved to a different scope") unless same_scope?(target)
       end
 
@@ -346,7 +345,7 @@ module SimpleNestedSet
       end
 
       def impossible_move!(message)
-        raise ImpossibleMove, "Impossible move: #{message.split("\n").map! { |line| line.trim }.join}"
+        raise ImpossibleMove, "Impossible move: #{message.split("\n").map! { |line| line.strip }.join}"
       end
   end
 end

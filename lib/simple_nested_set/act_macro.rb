@@ -11,8 +11,9 @@ module SimpleNestedSet
       before_validation :init_as_node
       before_destroy :prune_branch
       belongs_to :parent, :class_name => self.name
+      has_many :children, :foreign_key => :parent_id, :class_name => self.base_class.name
 
-      default_scope :order => 'lft'
+      default_scope :order => :lft
 
       klass = options[:class] || self
       scopes = Array(options[:scope]).map { |s| s.to_s !~ /_id$/ ? :"#{s}_id" : s }
