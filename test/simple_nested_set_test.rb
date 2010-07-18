@@ -53,6 +53,17 @@ class SimpleNestedSetTest < Test::Unit::TestCase
     assert_equal [unrelated_root], Node.leaves(:scope_id => 2)
   end
 
+  # SCOPES
+
+  test "Node.nested_set(:scope_id => 1) scopes to the given scope" do
+    assert_equal nodes, Node.nested_set(:scope_id => 1)
+  end
+
+  test "Node.with_levels includes the level" do
+    levels = Node.nested_set(:scope_id => 1).with_levels.map { |node| node.attributes['level'] }
+    assert_equal [1, 2, 2, 3], levels
+  end
+
 
   # INSTANCE METHODS
 

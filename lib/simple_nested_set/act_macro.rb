@@ -22,11 +22,15 @@ module SimpleNestedSet
         args.empty? ? {} : { :conditions => nested_set.conditions(*args) }
       end
 
-      scope(:nested_set, nested_set_proc) do
+      scope :nested_set, nested_set_proc do
         define_method(:scope_columns) { scopes }
-        define_method(:klass)  { klass }
+        define_method(:klass) { klass }
         define_method(:conditions) { |record| scopes.inject({}) { |c, name| c.merge(name => record[name]) } }
       end
+
+      scope :with_levels, lambda {
+        { :select => "COUNT(id) AS level" } # TODO ... ?
+      }
     end
 
     def acts_as_nested_set?
