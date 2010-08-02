@@ -18,7 +18,8 @@ ActiveRecord::Base.establish_connection(config)
 
 log = '/tmp/simple_nested_set_test.log'
 FileUtils.touch(log) unless File.exists?(log)
-ActiveRecord::Base.logger = Logger.new(log) # hu, why doesn't it log any queries?
+ActiveRecord::Base.logger = Logger.new(log)
+Rails::LogSubscriber.add(:active_record, ActiveRecord::Railties::LogSubscriber.new)
 
 class Test::Unit::TestCase
   def setup
