@@ -4,6 +4,13 @@ module SimpleNestedSet
   module ClassMethods
     NESTED_SET_ATTRIBUTES = [:parent_id, :left_id, :right_id]
 
+    def init_nested_set_class(options)
+      const_get(:NestedSet) rescue const_set(:NestedSet, Class.new(NestedSet)).tap do |klass|
+        klass.owner_class = self
+        klass.scope_names = Array(options[:scope]).map { |s| s.to_s !~ /_id$/ ? :"#{s}_id" : s }
+      end
+    end
+
     def create(attributes)
       with_move_by_attributes(attributes) { super }
     end
@@ -23,12 +30,12 @@ module SimpleNestedSet
 
     # Returns root nodes (with the given scope if any)
     def roots(scope = nil)
-      nested_set.scope(scope).without_parent
+      nested_set_class.scope(scope).without_parent
     end
 
     # Returns roots when multiple roots (or virtual root, which is the same)
     def leaves(scope = nil)
-      nested_set.scope(scope).with_leaves
+      nested_set_class.scope(scope).with_leaves
     end
 
     def without_node(id)

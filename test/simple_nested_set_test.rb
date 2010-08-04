@@ -56,8 +56,8 @@ class SimpleNestedSetTest < Test::Unit::TestCase
 
   # SCOPES
 
-  test "Node.nested_set.scope(:scope_id => 1) scopes to the given scope" do
-    assert_equal nodes, Node.nested_set.scope(:scope_id => 1)
+  test "Node::NestedSet.scope(:scope_id => 1) scopes to the given scope" do
+    assert_equal nodes, Node::NestedSet.scope(:scope_id => 1)
   end
 
   # TODO
