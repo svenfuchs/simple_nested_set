@@ -1,7 +1,5 @@
 module SimpleNestedSet
   class NestedSet < ActiveRecord::Relation
-    include Protection
-
     NESTED_SET_ATTRIBUTES = [:parent_id, :left_id, :right_id]
 
     class_inheritable_accessor :node_class, :scope_names

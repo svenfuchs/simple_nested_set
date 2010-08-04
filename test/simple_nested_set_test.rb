@@ -369,49 +369,49 @@ class SimpleNestedSetTest < Test::Unit::TestCase
   # EXCEPTIONS
 
   test "moving a node to itself as a parent raises" do
-    assert_raises(SimpleNestedSet::ImpossibleMove) do
+    assert_raises(SimpleNestedSet::Move::Impossible) do
       child_1.move_to_child_of(child_1)
     end
   end
 
   test "moving a node to itself as an ancestor raises" do
-    assert_raises(SimpleNestedSet::ImpossibleMove) do
+    assert_raises(SimpleNestedSet::Move::Impossible) do
       root.move_to_child_of(child_2_1)
     end
   end
 
   test "moving a node to the left of itself raises" do
-    assert_raises(SimpleNestedSet::ImpossibleMove) do
+    assert_raises(SimpleNestedSet::Move::Impossible) do
       child_1.move_to_left_of(child_1)
     end
   end
 
   test "moving a node to the right of itself raises" do
-    assert_raises(SimpleNestedSet::ImpossibleMove) do
+    assert_raises(SimpleNestedSet::Move::Impossible) do
       child_1.move_to_right_of(child_1)
     end
   end
 
   test "moving a node to a different scope" do
-    assert_raises(SimpleNestedSet::ImpossibleMove) do
+    assert_raises(SimpleNestedSet::Move::Impossible) do
       child_1.move_to_child_of(unrelated_root)
     end
   end
 
   test "node.update_attributes(:parent_id => parent.id, :left_id => left.id) raises if left.parent_id != parent_id" do
-    assert_raises(SimpleNestedSet::InconsistentMove) do
+    assert_raises(SimpleNestedSet::Move::Inconsistent) do
       child_2_1.update_attributes!(:parent_id => root.id, :left_id => root.id)
     end
   end
 
   test "node.update_attributes(:parent_id => parent.id, :right_id => right.id) raises if right.parent_id != parent_id" do
-    assert_raises(SimpleNestedSet::InconsistentMove) do
+    assert_raises(SimpleNestedSet::Move::Inconsistent) do
       child_2_1.update_attributes!(:parent_id => root.id, :right_id => root.id)
     end
   end
 
   test "node.update_attributes(:left_id => left.id, :right_id => right.id) raises unless right_id refers to the right_sibling of left" do
-    assert_raises(SimpleNestedSet::InconsistentMove) do
+    assert_raises(SimpleNestedSet::Move::Inconsistent) do
       child_2_1.update_attributes!(:left_id => root.id, :right_id => root.id)
     end
   end
