@@ -128,75 +128,7 @@ module SimpleNestedSet
     end
 
     def move_to(target, position)
-      # return if _run_before_move_callbacks == false
-
-      transaction do
-        target.nested_set.reload if target.is_a?(node_class)
-        reload
-
-        target = find(target) if target && !target.is_a?(ActiveRecord::Base)
-        protect_impossible_move!(position, target) if target
-
-        bound = case position
-          when :child
-            target.rgt
-          when :left
-            target.lft
-          when :right
-            target.rgt + 1
-          when :root
-            roots = node_class.roots
-            roots.empty? ? 1 : roots.last.rgt + 1
-        end
-
-        if bound > node.rgt
-          bound -= 1
-          other_bound = node.rgt + 1
-        else
-          other_bound = node.lft - 1
-        end
-
-        # there would be no change
-        return if bound == node.rgt || bound == node.lft
-
-        # we have defined the boundaries of two non-overlapping intervals,
-        # so sorting puts both the intervals and their boundaries in order
-        a, b, c, d = [node.lft, node.rgt, bound, other_bound].sort
-
-        parent_id = case position
-          when :child;  target.id
-          when :root;   nil
-          else          target.parent_id
-        end
-
-        sql = <<-sql
-          lft = CASE
-            WHEN lft BETWEEN :a AND :b THEN lft + :d - :b
-            WHEN lft BETWEEN :c AND :d THEN lft + :a - :c
-            ELSE lft END,
-
-          rgt = CASE
-            WHEN rgt BETWEEN :a AND :b THEN rgt + :d - :b
-            WHEN rgt BETWEEN :c AND :d THEN rgt + :a - :c
-            ELSE rgt END,
-
-          parent_id = CASE
-            WHEN id = :id THEN :parent_id
-            ELSE parent_id END,
-
-          level = (
-            SELECT count(id)
-            FROM #{node_class.quoted_table_name} as t
-            WHERE t.lft < #{node_class.quoted_table_name}.lft AND rgt > #{node_class.quoted_table_name}.rgt
-          )
-        sql
-        update_all([sql, { :id => node.id, :parent_id => parent_id, :a => a, :b => b, :c => c, :d => d }])
-
-        target.nested_set.reload if target
-        reload
-
-        # _run_after_move_callbacks
-      end
+      Move.new(node, target, position).perform
     end
   end
 end

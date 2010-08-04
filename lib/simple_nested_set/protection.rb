@@ -1,12 +1,13 @@
 module SimpleNestedSet
   module Protection
-    def protect_impossible_move!(position, target)
+    def protect_impossible_move!
       positions = [:child, :left, :right, :root]
+      impossible_move!("A new node can not be moved") if node.new_record?
       impossible_move!("Position must be one of #{positions.inspect} but is #{position.inspect}.") unless positions.include?(position)
       impossible_move!("A new node can not be moved") if node.new_record?
       impossible_move!("A node can't be moved to itself") if node == target
-      impossible_move!("A node can't be moved to a descendant of itself.") if (node.lft..node.rgt).include?(target.lft) && (node.lft..node.rgt).include?(target.rgt)
-      impossible_move!("A node can't be moved to a different scope") unless same_scope?(target)
+      impossible_move!("A node can't be moved to a descendant of itself.") if target && (node.lft..node.rgt).include?(target.lft) && (node.lft..node.rgt).include?(target.rgt)
+      impossible_move!("A node can't be moved to a different scope") if target && !nested_set.same_scope?(target)
     end
 
     def protect_inconsistent_move!(parent_id, left_id, right_id)
