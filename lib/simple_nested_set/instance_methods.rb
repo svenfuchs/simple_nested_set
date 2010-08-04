@@ -8,15 +8,11 @@ module SimpleNestedSet
 
     # TODO refactor
     def update_attributes(attributes)
-      nested_set_attributes = nested_set_class.extract_nested_set_attributes!(attributes)
-      nested_set.move_by_attributes(nested_set_attributes) unless nested_set_attributes.empty?
-      super
+      nested_set.with_move_by_attributes(attributes) { super }
     end
 
     def update_attributes!(attributes)
-      nested_set_attributes = nested_set_class.extract_nested_set_attributes!(attributes)
-      nested_set.move_by_attributes(nested_set_attributes) unless nested_set_attributes.empty?
-      super
+      nested_set.with_move_by_attributes(attributes) { super }
     end
 
     # recursively populates the parent and children associations of self and

@@ -1,3 +1,2 @@
-- make attributes= aware of passed :children => [] and :child_ids => []
-- refactor move_by_attributes and move_to instance methods
 - get after_move callbacks working
+- make attributes= aware of passed :children => [] and :child_ids => []

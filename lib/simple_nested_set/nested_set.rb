@@ -22,12 +22,12 @@ module SimpleNestedSet
         end
       end
 
-      def with_move_by_attributes(attributes)
+      def with_move_by_attributes(attributes, node = nil)
         node_class.transaction do
           nested_set_attributes = extract_nested_set_attributes!(attributes)
-          yield.tap do |node|
-            node.nested_set.move_by_attributes(nested_set_attributes) unless nested_set_attributes.empty?
-          end
+          result = yield
+          (node || result).nested_set.move_by_attributes(nested_set_attributes) unless nested_set_attributes.empty?
+          result
         end
       end
 
@@ -46,6 +46,10 @@ module SimpleNestedSet
       @where_values = self.class.scope(node).instance_variable_get(:@where_values) if node
     end
 
+    def with_move_by_attributes(attributes, &block)
+      self.class.with_move_by_attributes(attributes, node, &block)
+    end
+
     # Returns true if the node has the same scope as the given node
     def same_scope?(other)
       scope_names.all? { |scope| node.send(scope) == other.send(scope) }
@@ -58,11 +62,10 @@ module SimpleNestedSet
 
     def populate_associations(nodes)
       node.children.target = nodes.select do |child|
-        if child.parent_id == node.id
-          nodes.delete(child)
-          child.nested_set.populate_associations(nodes)
-          child.parent = node
-        end
+        next unless child.parent_id == node.id
+        nodes.delete(child)
+        child.nested_set.populate_associations(nodes)
+        child.parent = node
       end
     end
 
@@ -70,8 +73,7 @@ module SimpleNestedSet
     def init_as_node
       unless node.rgt && node.lft
         max_right = maximum(:rgt) || 0
-        node.lft = max_right + 1
-        node.rgt = max_right + 2
+        node.lft, node.rgt = max_right + 1, max_right + 2
       end
     end
 
@@ -79,8 +81,8 @@ module SimpleNestedSet
     # back to the left so the counts still work.
     def prune_branch
       if node.rgt && node.lft
-        diff  = node.rgt - node.lft + 1
         transaction do
+          diff = node.rgt - node.lft + 1
           delete_all(['lft > ? AND rgt < ?', node.lft, node.rgt])
           update_all(['lft = (lft - ?)', diff], ['lft >= ?', node.rgt])
           update_all(['rgt = (rgt - ?)', diff], ['rgt >= ?', node.rgt])
