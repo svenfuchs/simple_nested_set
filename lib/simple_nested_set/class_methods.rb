@@ -12,16 +12,17 @@ module SimpleNestedSet
       with_move_by_attributes(attributes) { super }
     end
 
-    # Returns the single root
+    # Returns the first root node (with the given scope if any)
     def root(*args)
       nested_set(*args).first(:conditions => { :parent_id => nil })
     end
 
-    # Returns roots when multiple roots (or virtual root, which is the same)
+    # Returns root nodes (with the given scope if any)
     def roots(*args)
       nested_set(*args).scoped(:conditions => { :parent_id => nil } )
     end
 
+    # Returns roots when multiple roots (or virtual root, which is the same)
     def leaves(*args)
       nested_set(*args).scoped(:conditions => 'lft = rgt - 1' )
     end

@@ -27,13 +27,14 @@ module SimpleNestedSet
       parent_id.blank?
     end
 
-    # Returns true is this is a child node
+    # Returns true if this is a child node
     def child?
       !root?
     end
 
+    # Returns true if this is a leaf node
     def leaf?
-      rgt - lft == 1
+      rgt.to_i - lft.to_i == 1
     end
 
     # compare by left column
@@ -51,10 +52,12 @@ module SimpleNestedSet
       nested_set.klass.find(parent_id) unless root?
     end
 
+    # Returns true if this is an ancestor of the given node
     def ancestor_of?(other)
       lft < other.lft && rgt > other.rgt
     end
 
+    # Returns true if this is equal to or an ancestor of the given node
     def self_or_ancestor_of?(other)
       self == other || ancestor_of?(other)
     end
@@ -69,10 +72,12 @@ module SimpleNestedSet
       ancestors + [self]
     end
 
+    # Returns true if this is a descendent of the given node
     def descendent_of?(other)
       lft > other.lft && rgt < other.rgt
     end
 
+    # Returns true if this is equal to or a descendent of the given node
     def self_or_descendent_of?(other)
       self == other || descendent_of?(other)
     end
@@ -91,11 +96,6 @@ module SimpleNestedSet
     def descendents_count
       rgt > lft ? (rgt - lft - 1) / 2 : 0
     end
-
-    # # Returns a set of only this entry's immediate children
-    # def children
-    #   rgt - lft == 1 ? []  : nested_set.scoped(:conditions => { :parent_id => id })
-    # end
 
     # Returns a set of only this entry's immediate children including self
     def self_and_children
@@ -135,21 +135,22 @@ module SimpleNestedSet
       rgt - lft == 1 ? []  : nested_set.scoped(:conditions => ["lft > ? AND rgt < ? AND lft = rgt - 1", lft, rgt])
     end
 
-    # Move the node to the child of another node
+    # Moves the node to the child of another node
     def move_to_child_of(node)
       node ? move_to(node, :child) : move_to_root
     end
 
+    # Makes this node a root node
     def move_to_root
       move_to(nil, :root)
     end
 
-    # moves the node to the left of its left sibling if any
+    # Moves the node to the left of its left sibling if any
     def move_left
       move_to_left_of(left_sibling) if left_sibling
     end
 
-    # moves the node to the right of its right sibling if any
+    # Moves the node to the right of its right sibling if any
     def move_right
       move_to_right_of(right_sibling) if right_sibling
     end
