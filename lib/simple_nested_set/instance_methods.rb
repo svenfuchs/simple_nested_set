@@ -56,7 +56,7 @@ module SimpleNestedSet
 
     # Returns the parent
     def parent
-      nested_set.klass.find(parent_id) unless root?
+      self.class.find(parent_id) unless root?
     end
 
     # Returns true if this is an ancestor of the given node
@@ -189,7 +189,7 @@ module SimpleNestedSet
       end
 
       def without_self(scope)
-        scope.where(["#{nested_set.klass.table_name}.id <> ?", id])
+        scope.where(["#{self.class.table_name}.id <> ?", id])
       end
 
       # before validation set lft and rgt to the end of the tree
@@ -206,7 +206,7 @@ module SimpleNestedSet
       def prune_branch
         unless rgt.nil? || lft.nil?
           diff = rgt - lft + 1
-          nested_set.klass.transaction {
+          self.class.transaction {
             nested_set.delete_all "lft > #{lft} AND rgt < #{rgt}"
             nested_set.update_all "lft = (lft - #{diff})",   "lft >= #{rgt}"
             nested_set.update_all "rgt = (rgt - #{diff} )",  "rgt >= #{rgt}"
@@ -226,19 +226,19 @@ module SimpleNestedSet
         attributes.each { |key, value| attributes[key] = nil if value == 'null' }
 
         parent_id = attributes[:parent_id] ? attributes[:parent_id] : self.parent_id
-        parent = parent_id.blank? ? nil : nested_set.klass.find(parent_id)
+        parent = parent_id.blank? ? nil : self.class.find(parent_id)
 
         # if left_id is given but blank, set right_id to leftmost sibling
         if attributes.has_key?(:left_id) && attributes[:left_id].blank?
           attributes.delete(:left_id)
-          siblings = parent ? parent.children : nested_set.klass.roots(self)
+          siblings = parent ? parent.children : self.class.roots(self)
           attributes[:right_id] = siblings.first.id if siblings.first
         end
 
         # if right_id is given but blank, set left_id to rightmost sibling
         if attributes.has_key?(:right_id) && attributes[:right_id].blank?
           attributes.delete(:right_id)
-          siblings = parent ? parent.children : nested_set.klass.roots(self)
+          siblings = parent ? parent.children : self.class.roots(self)
           attributes[:left_id] = siblings.last.id if siblings.last
         end
 
@@ -262,10 +262,10 @@ module SimpleNestedSet
         # return if _run_before_move_callbacks == false
 
         transaction do
-          target.reload_nested_set if target.is_a?(nested_set.klass)
+          target.reload_nested_set if target.is_a?(self.class)
           self.reload_nested_set
 
-          target = nested_set.klass.find(target) if target && !target.is_a?(ActiveRecord::Base)
+          target = self.class.find(target) if target && !target.is_a?(ActiveRecord::Base)
           protect_impossible_move!(position, target) if target
 
           bound = case position
@@ -276,7 +276,7 @@ module SimpleNestedSet
             when :right
               target.rgt + 1
             when :root
-              roots = nested_set.klass.roots
+              roots = self.class.roots
               roots.empty? ? 1 : roots.last.rgt + 1
           end
 
@@ -317,12 +317,12 @@ module SimpleNestedSet
 
             level = (
               SELECT count(id)
-              FROM #{nested_set.klass.quoted_table_name} as t
-              WHERE t.lft < #{nested_set.klass.quoted_table_name}.lft AND rgt > #{nested_set.klass.quoted_table_name}.rgt
+              FROM #{self.class.quoted_table_name} as t
+              WHERE t.lft < #{self.class.quoted_table_name}.lft AND rgt > #{self.class.quoted_table_name}.rgt
             )
           sql
           args  = { :a => a, :b => b, :c => c, :d => d, :id => id, :parent_id => parent_id }
-          nested_set.klass.update_all [sql, args], nested_set.conditions(self)
+          self.class.update_all [sql, args], nested_set.conditions(self)
 
           target.reload_nested_set if target
           reload_nested_set
@@ -341,8 +341,8 @@ module SimpleNestedSet
       end
 
       def protect_inconsistent_move!(parent_id, left_id, right_id)
-        left = nested_set.klass.find(left_id) if left_id
-        right = nested_set.klass.find(right_id) if right_id
+        left = self.class.find(left_id) if left_id
+        right = self.class.find(right_id) if right_id
 
         if left && right && (!left.right_sibling || left.right_sibling.id != right_id)
           inconsistent_move! <<-msg
