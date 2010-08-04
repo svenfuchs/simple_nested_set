@@ -53,11 +53,13 @@ class SimpleNestedSetTest < Test::Unit::TestCase
     assert_equal [unrelated_root], Node.leaves(:scope_id => 2)
   end
 
+
   # SCOPES
 
   test "Node.nested_set(:scope_id => 1) scopes to the given scope" do
     assert_equal nodes, Node.nested_set(:scope_id => 1)
   end
+
 
   # CALLBACKS
 
@@ -138,7 +140,7 @@ class SimpleNestedSetTest < Test::Unit::TestCase
     assert_equal [child_2_1], child_2_1.self_and_siblings
   end
 
-  test "node.leaves returns all of this node's descendents that are leaves" do
+  test "node.leaves returns all of this node's descendants that are leaves" do
     assert_equal [child_1, child_2_1], root.leaves
     assert_equal [], child_1.leaves
     assert_equal [child_2_1], child_2.leaves
@@ -153,11 +155,11 @@ class SimpleNestedSetTest < Test::Unit::TestCase
     assert_equal [root, child_1, child_2, child_2_1], root.self_and_descendants
   end
 
-  test "node.descendents_count returns the node's number of children" do
-    assert_equal 3, root.descendents_count
-    assert_equal 0, child_1.descendents_count
-    assert_equal 1, child_2.descendents_count
-    assert_equal 0, child_2_1.descendents_count
+  test "node.descendants_count returns the node's number of children" do
+    assert_equal 3, root.descendants_count
+    assert_equal 0, child_1.descendants_count
+    assert_equal 1, child_2.descendants_count
+    assert_equal 0, child_2_1.descendants_count
   end
 
   test "node.children? returns true if the node has children, false otherwise" do

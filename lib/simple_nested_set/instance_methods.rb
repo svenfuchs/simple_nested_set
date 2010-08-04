@@ -92,8 +92,8 @@ module SimpleNestedSet
       [self] + descendants
     end
 
-    # Returns the number of descendents
-    def descendents_count
+    # Returns the number of descendants
+    def descendants_count
       rgt > lft ? (rgt - lft - 1) / 2 : 0
     end
 
@@ -104,7 +104,7 @@ module SimpleNestedSet
 
     # Returns true if the node has any children
     def children?
-      descendents_count > 0
+      descendants_count > 0
     end
     alias has_children? children?
 
@@ -130,7 +130,7 @@ module SimpleNestedSet
     end
     alias right_sibling next_sibling
 
-    # Returns all descendents that are leaves
+    # Returns all descendants that are leaves
     def leaves
       rgt - lft == 1 ? []  : nested_set.scoped(:conditions => ["lft > ? AND rgt < ? AND lft = rgt - 1", lft, rgt])
     end
