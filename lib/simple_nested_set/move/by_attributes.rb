@@ -19,7 +19,7 @@ module SimpleNestedSet
       def initialize(node, attributes)
         @node, @attributes = node, attributes
         normalize_attributes!
-        protect_inconsistent_move!(parent_id, left_id, right_id)
+        protect_inconsistent_move!
       end
 
       def perform
@@ -39,14 +39,14 @@ module SimpleNestedSet
           attributes.each { |key, value| attributes[key] = nil if value == 'null' }
 
           # if left_id is given but blank, set right_id to leftmost sibling
-          if attributes.has_key?(:left_id) && attributes[:left_id].blank? && siblings.any?
-            attributes[:right_id] = siblings.first.id
-          end
+          attributes[:right_id] = siblings.first.id if blank_given?(:left_id) && siblings.any?
 
           # if right_id is given but blank, set left_id to rightmost sibling
-          if attributes.has_key?(:right_id) && attributes[:right_id].blank? && siblings.any?
-            attributes[:left_id] = siblings.last.id
-          end
+          attributes[:left_id]  = siblings.last.id if blank_given?(:right_id) && siblings.any?
+        end
+
+        def blank_given?(key)
+          attributes.has_key?(key) && attributes[key].blank? && siblings.any?
         end
 
         def siblings

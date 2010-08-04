@@ -10,7 +10,6 @@ module SimpleNestedSet
       def initialize(node, target, position)
         @node, @target, @position = node, target, position
         @target = nested_set.find(target) if target && !target.is_a?(ActiveRecord::Base)
-
         protect_impossible_move!
       end
 

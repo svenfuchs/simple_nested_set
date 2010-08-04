@@ -14,8 +14,8 @@ module SimpleNestedSet
         impossible_move!("A node can't be moved to a different scope") if target && !nested_set.same_scope?(target)
       end
 
-      def protect_inconsistent_move!(parent_id, left_id, right_id)
-        left  = nested_set.find(left_id) if left_id
+      def protect_inconsistent_move!
+        left  = nested_set.find(left_id)  if left_id
         right = nested_set.find(right_id) if right_id
 
         if left && right && (!left.right_sibling || left.right_sibling.id != right_id)
