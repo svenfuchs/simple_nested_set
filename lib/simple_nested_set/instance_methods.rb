@@ -12,6 +12,13 @@ module SimpleNestedSet
       super
     end
 
+    # recursively populates the parent and children associations of self and
+    # all descendants using one query
+    def load_tree
+      populate_associations(descendants)
+      self
+    end
+
     # Returns true if the node has the same scope as the given node
     def same_scope?(other)
       nested_set.scope_columns.all? { |name| self.send(name) == other.send(name) }
@@ -169,6 +176,16 @@ module SimpleNestedSet
 
       def nested_set
         @nested_set ||= self.class.nested_set(self)
+      end
+
+      def populate_associations(nodes)
+        children.target = nodes.select do |child|
+          if child.parent_id == id
+            nodes.delete(child)
+            child.populate_associations(nodes)
+            child.parent = self
+          end
+        end
       end
 
       def without_self(scope)

@@ -70,6 +70,28 @@ class SimpleNestedSetTest < Test::Unit::TestCase
 
   # INSTANCE METHODS
 
+  test "load_tree recursively populates the parent and children associations of self and all descendants" do
+    root.load_tree
+
+    assert root.children.loaded?
+    assert_equal [child_1, child_2], root.children
+
+    assert root.children.first.children.loaded?
+    assert_equal [], root.children.first.children
+    assert root.children.first.parent.loaded?
+    assert_equal root, root.children.first.parent
+
+    assert root.children.last.children.loaded?
+    assert_equal [child_2_1], root.children.last.children
+    assert root.children.last.parent.loaded?
+    assert_equal root, root.children.last.parent
+
+    assert root.children.last.children.first.children.loaded?
+    assert_equal [], root.children.last.children.first.children
+    assert root.children.last.children.first.parent.loaded?
+    assert_equal child_2, root.children.last.children.first.parent
+  end
+
   test "node.root? returns true if the node is a root, false otherwise" do
     assert root.root?
     assert !child_1.root?

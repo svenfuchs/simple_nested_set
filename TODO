@@ -1,4 +1,3 @@
-- implement a :tree method that populates the children association
 - make attributes= aware of passed :children => [] and :child_ids => []
 - refactor move_by_attributes and move_to instance methods
 - get after_move callbacks working

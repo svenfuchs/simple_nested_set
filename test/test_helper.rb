@@ -8,6 +8,7 @@ require 'logger'
 require 'pathname_local'
 require 'test_declarative'
 require 'database_cleaner'
+require 'ruby-debug'
 
 $:.unshift Pathname.local('../lib').to_s
 require 'simple_nested_set'
