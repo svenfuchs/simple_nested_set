@@ -6,6 +6,7 @@ module SimpleNestedSet
   autoload :ClassMethods,    'simple_nested_set/class_methods'
   autoload :InstanceMethods, 'simple_nested_set/instance_methods'
   autoload :NestedSet,       'simple_nested_set/nested_set'
+  autoload :Protection,      'simple_nested_set/protection'
 end
 
 ActiveRecord::Base.send :extend, SimpleNestedSet::ActMacro
