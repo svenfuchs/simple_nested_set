@@ -21,7 +21,7 @@ module SimpleNestedSet
       scopes = Array(options[:scope]).map { |s| s.to_s !~ /_id$/ ? :"#{s}_id" : s }
 
       nested_set_proc = lambda do |*args|
-        args.empty? ? {} : { :conditions => nested_set.conditions(*args) }
+        args.empty? ? {} : where(nested_set.conditions(*args))
       end
 
       scope :nested_set, nested_set_proc do

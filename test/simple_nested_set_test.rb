@@ -60,12 +60,13 @@ class SimpleNestedSetTest < Test::Unit::TestCase
     assert_equal nodes, Node.nested_set(:scope_id => 1)
   end
 
-
-  # CALLBACKS
-
-  test "before_move callback gets called" do
-    assert_equal 'foo with before_move callback!', CallbackNode.create!(:name => 'foo').name
-  end
+  # TODO
+  #
+  # # CALLBACKS
+  #
+  # test "before_move callback gets called" do
+  #   assert_equal 'foo with before_move callback!', CallbackNode.create!(:name => 'foo').name
+  # end
 
 
   # INSTANCE METHODS

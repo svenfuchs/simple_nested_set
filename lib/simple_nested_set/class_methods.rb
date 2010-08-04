@@ -12,19 +12,23 @@ module SimpleNestedSet
       with_move_by_attributes(attributes) { super }
     end
 
+    # def tree(*args)
+    #   nested_set(*args).first(:conditions => { :parent_id => nil })
+    # end
+
     # Returns the first root node (with the given scope if any)
     def root(*args)
-      nested_set(*args).first(:conditions => { :parent_id => nil })
+      roots(*args).first
     end
 
     # Returns root nodes (with the given scope if any)
     def roots(*args)
-      nested_set(*args).scoped(:conditions => { :parent_id => nil } )
+      nested_set(*args).where(:parent_id => nil)
     end
 
     # Returns roots when multiple roots (or virtual root, which is the same)
     def leaves(*args)
-      nested_set(*args).scoped(:conditions => 'lft = rgt - 1' )
+      nested_set(*args).where('lft = rgt - 1' )
     end
 
     protected
