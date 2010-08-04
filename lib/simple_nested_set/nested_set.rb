@@ -27,7 +27,9 @@ module SimpleNestedSet
       def with_move_by_attributes(attributes)
         node_class.transaction do
           nested_set_attributes = extract_nested_set_attributes!(attributes)
-          yield.tap { |node| node.nested_set.move_by_attributes(nested_set_attributes) }
+          yield.tap do |node|
+            node.nested_set.move_by_attributes(nested_set_attributes) unless nested_set_attributes.empty?
+          end
         end
       end
 
@@ -89,46 +91,11 @@ module SimpleNestedSet
     end
 
     def move_by_attributes(attributes)
-      return unless attributes.detect { |key, value| [:parent_id, :left_id, :right_id].include?(key.to_sym) }
-
-      attributes.symbolize_keys!
-      attributes.each { |key, value| attributes[key] = nil if value == 'null' }
-
-      parent_id = attributes[:parent_id] ? attributes[:parent_id] : node.parent_id
-      parent = parent_id.blank? ? nil : find(parent_id)
-
-      # if left_id is given but blank, set right_id to leftmost sibling
-      if attributes.has_key?(:left_id) && attributes[:left_id].blank?
-        attributes.delete(:left_id)
-        siblings = parent ? parent.children : node.class.roots(node)
-        attributes[:right_id] = siblings.first.id if siblings.first
-      end
-
-      # if right_id is given but blank, set left_id to rightmost sibling
-      if attributes.has_key?(:right_id) && attributes[:right_id].blank?
-        attributes.delete(:right_id)
-        siblings = parent ? parent.children : node.class.roots(node)
-        attributes[:left_id] = siblings.last.id if siblings.last
-      end
-
-      parent_id, left_id, right_id = [:parent_id, :left_id, :right_id].map do |key|
-        value = attributes.delete(key)
-        value.blank? ? nil : value.to_i
-      end
-
-      protect_inconsistent_move!(parent_id, left_id, right_id)
-
-      if left_id && left_id != node.id
-        node.move_to_right_of(left_id)
-      elsif right_id && right_id != node.id
-        node.move_to_left_of(right_id)
-      elsif parent_id != node.parent_id
-        node.move_to_child_of(parent_id)
-      end
+      Move::ByAttributes.new(node, attributes).perform
     end
 
     def move_to(target, position)
-      Move.new(node, target, position).perform
+      Move::ToTarget.new(node, target, position).perform
     end
   end
 end

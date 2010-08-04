@@ -6,13 +6,16 @@ module SimpleNestedSet
       @nested_set ||= nested_set_class.new(self)
     end
 
+    # TODO refactor
     def update_attributes(attributes)
-      nested_set.move_by_attributes(attributes)
+      nested_set_attributes = nested_set_class.extract_nested_set_attributes!(attributes)
+      nested_set.move_by_attributes(nested_set_attributes) unless nested_set_attributes.empty?
       super
     end
 
     def update_attributes!(attributes)
-      nested_set.move_by_attributes(attributes)
+      nested_set_attributes = nested_set_class.extract_nested_set_attributes!(attributes)
+      nested_set.move_by_attributes(nested_set_attributes) unless nested_set_attributes.empty?
       super
     end
 

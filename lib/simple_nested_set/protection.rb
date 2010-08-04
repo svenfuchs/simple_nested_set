@@ -11,8 +11,8 @@ module SimpleNestedSet
     end
 
     def protect_inconsistent_move!(parent_id, left_id, right_id)
-      left  = find(left_id) if left_id
-      right = find(right_id) if right_id
+      left  = nested_set.find(left_id) if left_id
+      right = nested_set.find(right_id) if right_id
 
       if left && right && (!left.right_sibling || left.right_sibling.id != right_id)
         inconsistent_move! <<-msg
