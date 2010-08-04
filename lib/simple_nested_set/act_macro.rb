@@ -28,10 +28,6 @@ module SimpleNestedSet
         define_method(:scope_columns) { scopes }
         define_method(:conditions) { |record| scopes.inject({}) { |c, name| c.merge(name => record[name]) } }
       end
-
-      scope :with_levels, lambda {
-        { :select => "COUNT(id) AS level" } # TODO ... ?
-      }
     end
 
     def acts_as_nested_set?
