@@ -12,23 +12,55 @@ module SimpleNestedSet
       with_move_by_attributes(attributes) { super }
     end
 
-    # def tree(*args)
-    #   nested_set(*args).first(:conditions => { :parent_id => nil })
+    # def tree(scope = nil)
+    #   roots.with_descendants
     # end
 
     # Returns the first root node (with the given scope if any)
-    def root(*args)
-      roots(*args).first
+    def root(scope = nil)
+      roots(scope).first
     end
 
     # Returns root nodes (with the given scope if any)
-    def roots(*args)
-      nested_set(*args).where(:parent_id => nil)
+    def roots(scope = nil)
+      nested_set.scope(scope).without_parent
     end
 
     # Returns roots when multiple roots (or virtual root, which is the same)
-    def leaves(*args)
-      nested_set(*args).where('lft = rgt - 1' )
+    def leaves(scope = nil)
+      nested_set.scope(scope).with_leaves
+    end
+
+    def without_node(id)
+      where(arel_table[:id].not_eq(id))
+    end
+
+    def without_parent
+      with_parent(nil)
+    end
+
+    def with_parent(parent_id)
+      where(:parent_id => parent_id)
+    end
+
+    def with_ancestors(lft, rgt)
+      where(arel_table[:lft].lt(lft).and(arel_table[:rgt].gt(rgt)))
+    end
+
+    def with_descendants(lft, rgt)
+      where(arel_table[:lft].gt(lft).and(arel_table[:rgt].lt(rgt)))
+    end
+
+    def with_left_sibling(lft)
+      where(:rgt => lft - 1)
+    end
+
+    def with_right_sibling(rgt)
+      where(:lft => rgt + 1)
+    end
+
+    def with_leaves
+      where("#{arel_table[:lft].to_sql} = #{arel_table[:rgt].to_sql} - 1")
     end
 
     protected

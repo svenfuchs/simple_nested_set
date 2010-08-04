@@ -15,13 +15,13 @@ module SimpleNestedSet
     # recursively populates the parent and children associations of self and
     # all descendants using one query
     def load_tree
-      populate_associations(descendants)
+      nested_set.populate_associations(self, descendants)
       self
     end
 
     # Returns true if the node has the same scope as the given node
     def same_scope?(other)
-      nested_set.scope_columns.all? { |name| self.send(name) == other.send(name) }
+      nested_set.scopes.all? { |scope| self.send(scope) == other.send(scope) }
     end
 
     # Returns the level of this object in the tree, root level is 0
@@ -71,7 +71,7 @@ module SimpleNestedSet
 
     # Returns an array of all parents
     def ancestors
-      nested_set.where(['lft < ? AND rgt > ?', lft, rgt])
+      nested_set.scope(self).with_ancestors(lft, rgt)
     end
 
     # Returns the array of all parents and self
@@ -91,7 +91,7 @@ module SimpleNestedSet
 
     # Returns a set of all of its children and nested children.
     def descendants
-      rgt - lft == 1 ? []  : nested_set.where(['lft > ? AND rgt < ?', lft, rgt])
+      rgt - lft == 1 ? []  : nested_set.scope(self).with_descendants(lft, rgt)
     end
 
     # Returns a set of itself and all of its nested children.
@@ -117,29 +117,29 @@ module SimpleNestedSet
 
     # Returns the array of all children of the parent, except self
     def siblings
-      without_self(self_and_siblings)
+      self_and_siblings.without_node(id)
     end
 
     # Returns the array of all children of the parent, included self
     def self_and_siblings
-      nested_set.where(:parent_id => parent_id)
+      nested_set.scope(self).with_parent(parent_id)
     end
 
     # Returns the lefthand sibling
     def previous_sibling
-      nested_set.where(:rgt => lft - 1).first
+      nested_set.scope(self).with_left_sibling(lft).first
     end
     alias left_sibling previous_sibling
 
     # Returns the righthand sibling
     def next_sibling
-      nested_set.where(:lft => rgt + 1).first
+      nested_set.scope(self).with_right_sibling(rgt).first
     end
     alias right_sibling next_sibling
 
     # Returns all descendants that are leaves
     def leaves
-      rgt - lft == 1 ? []  : nested_set.where(['lft > ? AND rgt < ? AND lft = rgt - 1', lft, rgt])
+      rgt - lft == 1 ? []  : nested_set.scope(self).with_descendants(lft, rgt).with_leaves
     end
 
     # Moves the node to the child of another node
@@ -173,46 +173,6 @@ module SimpleNestedSet
     end
 
     protected
-
-      def nested_set
-        @nested_set ||= self.class.nested_set(self)
-      end
-
-      def populate_associations(nodes)
-        children.target = nodes.select do |child|
-          if child.parent_id == id
-            nodes.delete(child)
-            child.populate_associations(nodes)
-            child.parent = self
-          end
-        end
-      end
-
-      def without_self(scope)
-        scope.where(["#{self.class.table_name}.id <> ?", id])
-      end
-
-      # before validation set lft and rgt to the end of the tree
-      def init_as_node
-        if lft.nil? || rgt.nil?
-          max_right = nested_set.maximum(:rgt) || 0
-          self.lft = max_right + 1
-          self.rgt = max_right + 2
-        end
-      end
-
-      # Prunes a branch off of the tree, shifting all of the elements on the right
-      # back to the left so the counts still work.
-      def prune_branch
-        unless rgt.nil? || lft.nil?
-          diff = rgt - lft + 1
-          self.class.transaction {
-            nested_set.delete_all "lft > #{lft} AND rgt < #{rgt}"
-            nested_set.update_all "lft = (lft - #{diff})",   "lft >= #{rgt}"
-            nested_set.update_all "rgt = (rgt - #{diff} )",  "rgt >= #{rgt}"
-          }
-        end
-      end
 
       # reload left, right, and parent
       def reload_nested_set
@@ -262,8 +222,8 @@ module SimpleNestedSet
         # return if _run_before_move_callbacks == false
 
         transaction do
-          target.reload_nested_set if target.is_a?(self.class)
-          self.reload_nested_set
+          nested_set.reload(target) if target.is_a?(self.class)
+          nested_set.reload(self)
 
           target = self.class.find(target) if target && !target.is_a?(ActiveRecord::Base)
           protect_impossible_move!(position, target) if target
@@ -324,8 +284,8 @@ module SimpleNestedSet
           args  = { :a => a, :b => b, :c => c, :d => d, :id => id, :parent_id => parent_id }
           self.class.update_all [sql, args], nested_set.conditions(self)
 
-          target.reload_nested_set if target
-          reload_nested_set
+          nested_set.reload(target) if target
+          nested_set.reload(self)
 
           # _run_after_move_callbacks
         end
