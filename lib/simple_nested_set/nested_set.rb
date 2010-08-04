@@ -1,5 +1,5 @@
 module SimpleNestedSet
-  class NestedSet
+  class NestedSet < ActiveRecord::Relation
     NESTED_SET_ATTRIBUTES = [:parent_id, :left_id, :right_id]
 
     class_inheritable_accessor :owner_class, :scope_names
@@ -16,8 +16,7 @@ module SimpleNestedSet
       def with_move_by_attributes(attributes)
         owner_class.transaction do
           nested_set_attributes = extract_nested_set_attributes!(attributes)
-          # yield.tap { |record| record.move_by_attributes(nested_set_attributes) }
-          yield.tap { |record| record.nested_set.move_by_attributes(nested_set_attributes) }
+          yield.tap { |node| node.nested_set.move_by_attributes(nested_set_attributes) }
         end
       end
 
@@ -30,17 +29,17 @@ module SimpleNestedSet
 
     attr_reader :node
 
-    def initialize(node = nil)
-      @node = node
+    def initialize(*args)
+      @node = args.first if args.size == 1
+      klass, arel = node ? [node.class, node.class.arel_table] : args
+
+      super(klass, arel)
+      @where_values = self.class.scope(node).instance_variable_get(:@where_values) if node
     end
 
     # Returns true if the node has the same scope as the given node
     def same_scope?(other)
       scope_names.all? { |scope| node.send(scope) == other.send(scope) }
-    end
-
-    def scoped
-      @scoped ||= self.class.scope(node)
     end
 
     # reload left, right, and parent
@@ -61,7 +60,7 @@ module SimpleNestedSet
     # before validation set lft and rgt to the end of the tree
     def init_as_node
       unless node.rgt && node.lft
-        max_right = scoped.maximum(:rgt) || 0
+        max_right = maximum(:rgt) || 0
         node.lft = max_right + 1
         node.rgt = max_right + 2
       end
@@ -73,23 +72,11 @@ module SimpleNestedSet
       if node.rgt && node.lft
         diff  = node.rgt - node.lft + 1
         owner_class.transaction {
-          scoped.delete_all(['lft > ? AND rgt < ?', node.lft, node.rgt])
-          scoped.update_all(['lft = (lft - ?)', diff], ['lft >= ?', node.rgt])
-          scoped.update_all(['rgt = (rgt - ?)', diff], ['rgt >= ?', node.rgt])
+          delete_all(['lft > ? AND rgt < ?', node.lft, node.rgt])
+          update_all(['lft = (lft - ?)', diff], ['lft >= ?', node.rgt])
+          update_all(['rgt = (rgt - ?)', diff], ['rgt >= ?', node.rgt])
         }
       end
-    end
-
-    # def lft
-    #   owner_class.arel_table[:lft].to_sql
-    # end
-    #
-    # def rgt
-    #   owner_class.arel_table[:rgt].to_sql
-    # end
-
-    def method_missing(name, *args, &block)
-      scoped.respond_to?(name) ? scoped.send(name, *args, &block) : super
     end
 
     def move_by_attributes(attributes)
@@ -204,48 +191,50 @@ module SimpleNestedSet
       end
     end
 
-    def protect_impossible_move!(position, target)
-      positions = [:child, :left, :right, :root]
-      impossible_move!("Position must be one of #{positions.inspect} but is #{position.inspect}.") unless positions.include?(position)
-      impossible_move!("A new node can not be moved") if node.new_record?
-      impossible_move!("A node can't be moved to itself") if node == target
-      impossible_move!("A node can't be moved to a descendant of itself.") if (node.lft..node.rgt).include?(target.lft) && (node.lft..node.rgt).include?(target.rgt)
-      impossible_move!("A node can't be moved to a different scope") unless same_scope?(target)
-    end
+    protected
 
-    def protect_inconsistent_move!(parent_id, left_id, right_id)
-      left  = node.class.find(left_id) if left_id
-      right = node.class.find(right_id) if right_id
-
-      if left && right && (!left.right_sibling || left.right_sibling.id != right_id)
-        inconsistent_move! <<-msg
-          Both :left_id (#{left_id.inspect}) and :right_id (#{right_id.inspect}) were given but
-          :right_id (#{right_id}) does not refer to the right_sibling (#{left.right_sibling.inspect})
-          of the node referenced by :left_id (#{left.inspect})
-        msg
+      def protect_impossible_move!(position, target)
+        positions = [:child, :left, :right, :root]
+        impossible_move!("Position must be one of #{positions.inspect} but is #{position.inspect}.") unless positions.include?(position)
+        impossible_move!("A new node can not be moved") if node.new_record?
+        impossible_move!("A node can't be moved to itself") if node == target
+        impossible_move!("A node can't be moved to a descendant of itself.") if (node.lft..node.rgt).include?(target.lft) && (node.lft..node.rgt).include?(target.rgt)
+        impossible_move!("A node can't be moved to a different scope") unless same_scope?(target)
       end
 
-      if left && parent_id && left.parent_id != parent_id
-        inconsistent_move! <<-msg
-          Both :left_id (#{left_id.inspect}) and :parent_id (#{parent_id.inspect}) were given but
-          left.parent_id (#{left.parent_id}) does not equal parent_id
-        msg
+      def protect_inconsistent_move!(parent_id, left_id, right_id)
+        left  = node.class.find(left_id) if left_id
+        right = node.class.find(right_id) if right_id
+
+        if left && right && (!left.right_sibling || left.right_sibling.id != right_id)
+          inconsistent_move! <<-msg
+            Both :left_id (#{left_id.inspect}) and :right_id (#{right_id.inspect}) were given but
+            :right_id (#{right_id}) does not refer to the right_sibling (#{left.right_sibling.inspect})
+            of the node referenced by :left_id (#{left.inspect})
+          msg
+        end
+
+        if left && parent_id && left.parent_id != parent_id
+          inconsistent_move! <<-msg
+            Both :left_id (#{left_id.inspect}) and :parent_id (#{parent_id.inspect}) were given but
+            left.parent_id (#{left.parent_id}) does not equal parent_id
+          msg
+        end
+
+        if right && parent_id && right.parent_id != parent_id
+          inconsistent_move! <<-msg
+            Both :right_id (#{right_id.inspect}) and :parent_id (#{parent_id.inspect}) were given but
+            right.parent_id (#{right.parent_id}) does not equal parent_id
+          msg
+        end
       end
 
-      if right && parent_id && right.parent_id != parent_id
-        inconsistent_move! <<-msg
-          Both :right_id (#{right_id.inspect}) and :parent_id (#{parent_id.inspect}) were given but
-          right.parent_id (#{right.parent_id}) does not equal parent_id
-        msg
+      def inconsistent_move!(message)
+        raise InconsistentMove, "Impossible move: #{message.split("\n").map! { |line| line.strip }.join}"
       end
-    end
 
-    def inconsistent_move!(message)
-      raise InconsistentMove, "Impossible move: #{message.split("\n").map! { |line| line.strip }.join}"
-    end
-
-    def impossible_move!(message)
-      raise ImpossibleMove, "Impossible move: #{message.split("\n").map! { |line| line.strip }.join}"
-    end
+      def impossible_move!(message)
+        raise ImpossibleMove, "Impossible move: #{message.split("\n").map! { |line| line.strip }.join}"
+      end
   end
 end
