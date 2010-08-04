@@ -3,9 +3,9 @@ require 'active_support/core_ext/hash/slice'
 module SimpleNestedSet
   module ClassMethods
     def init_nested_set_class(scopes)
-      const_get(:NestedSet) rescue const_set(:NestedSet, Class.new(NestedSet)).tap do |klass|
-        klass.owner_class = self
-        klass.scope_names = Array(scopes).map { |s| s.to_s =~ /_id$/ ? s.to_sym : :"#{s}_id" }
+      const_get(:NestedSet) rescue const_set(:NestedSet, Class.new(NestedSet)).tap do |node_class|
+        node_class.node_class = self
+        node_class.scope_names = Array(scopes).map { |s| s.to_s =~ /_id$/ ? s.to_sym : :"#{s}_id" }
       end
     end
 
@@ -16,10 +16,6 @@ module SimpleNestedSet
     def create!(attributes)
       nested_set_class.with_move_by_attributes(attributes) { super }
     end
-
-    # def tree(scope = nil)
-    #   roots.with_descendants
-    # end
 
     # Returns the first root node (with the given scope if any)
     def root(scope = nil)
