@@ -296,7 +296,13 @@ module SimpleNestedSet
 
             parent_id = CASE
               WHEN id = :id THEN :parent_id
-              ELSE parent_id END
+              ELSE parent_id END,
+
+            level = (
+              SELECT count(id)
+              FROM #{nested_set.klass.quoted_table_name} as t
+              WHERE t.lft < #{nested_set.klass.quoted_table_name}.lft AND rgt > #{nested_set.klass.quoted_table_name}.rgt
+            )
           sql
           args  = { :a => a, :b => b, :c => c, :d => d, :id => id, :parent_id => parent_id }
           nested_set.klass.update_all [sql, args], nested_set.conditions(self)
