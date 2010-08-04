@@ -231,12 +231,6 @@ class SimpleNestedSetTest < Test::Unit::TestCase
     assert_equal [0, 1, 1, 2], nodes.map { |node| node.level }
   end
 
-  test "node.same_scope? returns true if the node has the same scope as the given node, false otherwise" do
-    assert root.same_scope?(root)
-    assert root.same_scope?(child_1)
-    assert !root.same_scope?(unrelated_root)
-  end
-
   test "node.previous_sibling returns the left sibling if any, nil otherwise" do
     assert_nil root.previous_sibling
     assert_nil child_1.previous_sibling
@@ -249,6 +243,12 @@ class SimpleNestedSetTest < Test::Unit::TestCase
     assert_equal child_2, child_1.next_sibling
     assert_nil child_2.next_sibling
     assert_nil child_2_1.next_sibling
+  end
+
+  test "node.nested_set.same_scope? returns true if the node has the same scope as the given node, false otherwise" do
+    assert root.nested_set.same_scope?(root)
+    assert root.nested_set.same_scope?(child_1)
+    assert !root.nested_set.same_scope?(unrelated_root)
   end
 
 
