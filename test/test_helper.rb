@@ -13,14 +13,13 @@ require 'ruby-debug'
 $:.unshift Pathname.local('../lib').to_s
 require 'simple_nested_set'
 
-config = { 'adapter' => 'sqlite3', 'database' => ':memory:' }
-ActiveRecord::Base.configurations = { 'test' =>  config }
-ActiveRecord::Base.establish_connection(config)
-
 log = '/tmp/simple_nested_set_test.log'
 FileUtils.touch(log) unless File.exists?(log)
 ActiveRecord::Base.logger = Logger.new(log)
-# Rails::LogSubscriber.add(:active_record, ActiveRecord::Railties::LogSubscriber.new)
+ActiveRecord::LogSubscriber.attach_to(:active_record)
+ActiveRecord::Base.establish_connection(:adapter => 'sqlite3', :database => ':memory:')
+
+DatabaseCleaner.strategy = :truncation
 
 class Test::Unit::TestCase
   def setup
@@ -31,5 +30,3 @@ class Test::Unit::TestCase
     DatabaseCleaner.clean
   end
 end
-
-DatabaseCleaner.strategy = :truncation
