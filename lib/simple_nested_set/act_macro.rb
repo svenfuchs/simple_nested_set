@@ -14,7 +14,7 @@ module SimpleNestedSet
       before_destroy    lambda { |r| r.nested_set.prune_branch }
 
       belongs_to :parent, :class_name => self.name
-      has_many :children, :foreign_key => :parent_id, :class_name => self.base_class.name
+      has_many :children, :foreign_key => :parent_id, :class_name => class_of_active_record_descendant(self).name
 
       default_scope :order => :lft
 
