@@ -15,10 +15,8 @@ module SimpleNestedSet
 
       def perform
         node.run_callbacks(:move) do
-          # reload
           unless bound == node.rgt || bound == node.lft # there would be no change
             nested_set.transaction do
-              # node.save!
               nested_set.update_all(query)
             end
           end
@@ -85,7 +83,7 @@ module SimpleNestedSet
           level = (
             SELECT count(id)
             FROM #{table_name} as t
-            WHERE t.lft < #{table_name}.lft AND rgt > #{table_name}.rgt
+            WHERE t.lft < #{table_name}.lft AND t.rgt > #{table_name}.rgt
           )
         sql
         # TODO name a, b, c, d in a more reasonable way

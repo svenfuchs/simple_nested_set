@@ -1,1 +1,5 @@
 - make attributes= aware of passed :children => [] and :child_ids => []
+
+after_save lambda { |r| r.nested_set.save! } should ideally be
+before_save lambda { |r| r.nested_set.save! } where NestedSet only moves other
+nodes to make way for the new node.

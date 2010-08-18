@@ -1,7 +1,5 @@
 module SimpleNestedSet
   class NestedSet < ActiveRecord::Relation
-    NESTED_SET_ATTRIBUTES = [:parent_id, :left_id, :right_id]
-
     class_inheritable_accessor :node_class, :scope_names
 
     class << self
@@ -21,24 +19,6 @@ module SimpleNestedSet
           c.merge(name => scope.respond_to?(name) ? scope.send(name) : scope[name])
         end
       end
-
-      def with_move_by_attributes(attributes, node = nil)
-        node_class.transaction do
-          nested_set_attributes = extract_nested_set_attributes!(attributes)
-          yield.tap do |result|
-            unless nested_set_attributes.empty?
-              node ||= result
-              node.nested_set.move_by_attributes(nested_set_attributes)
-            end
-          end
-        end
-      end
-
-      def extract_nested_set_attributes!(attributes)
-        result = attributes.slice(*NESTED_SET_ATTRIBUTES)
-        attributes.except!(*NESTED_SET_ATTRIBUTES)
-        result
-      end
     end
 
     attr_reader :node
@@ -48,9 +28,11 @@ module SimpleNestedSet
       @node = args.first if args.size == 1
       @where_values = self.class.scope(node).instance_variable_get(:@where_values) if node
     end
-
-    def with_move_by_attributes(attributes, &block)
-      self.class.with_move_by_attributes(attributes, node, &block)
+    
+    def save!
+      attributes = node.instance_variable_get(:@_nested_set_attributes)
+      node.instance_variable_set(:@_nested_set_attributes, nil)
+      move_by_attributes(attributes) unless attributes.blank?
     end
 
     # Returns true if the node has the same scope as the given node
@@ -60,7 +42,7 @@ module SimpleNestedSet
 
     # reload left, right, and parent
     def reload
-      node.reload(:select => 'lft, rgt, parent_id')
+      node.reload(:select => 'lft, rgt, parent_id') unless node.new_record?
     end
 
     def populate_associations(nodes)
@@ -74,11 +56,8 @@ module SimpleNestedSet
 
     # before validation set lft and rgt to the end of the tree
     def init_as_node
-      unless node.rgt && node.lft
-        max_right = maximum(:rgt) || 0
-        node.lft, node.rgt = max_right + 1, max_right + 2
-      end
-      true
+      max_right = maximum(:rgt) || 0
+      node.lft, node.rgt = max_right + 1, max_right + 2
     end
 
     # Prunes a branch off of the tree, shifting all of the elements on the right

@@ -3,8 +3,14 @@ require File.expand_path('../test_helper', __FILE__)
 class SimpleNestedSetTest < Test::Unit::TestCase
   def setup
     super
-    @root, @child_1, @child_2, @child_2_1 = Node.all(:conditions => { :scope_id => 1 })
-    @unrelated_root = Node.first(:conditions => { :scope_id => 2 })
+    @root      = Node.create!(:name => 'root',      :scope_id => 1)
+    @child_1   = Node.create!(:name => 'child_1',   :scope_id => 1, :parent_id => root.id)
+    @child_2   = Node.create!(:name => 'child_2',   :scope_id => 1, :parent_id => root.id)
+    @child_2_1 = Node.create!(:name => 'child_2_1', :scope_id => 1, :parent_id => child_2.id)
+    @unrelated_root = Node.create!(:name => 'unrelated_root', :scope_id => 2)
+
+    [root, child_1, child_2, child_2_1].map(&:reload)
+
     @nodes = [root, child_1, child_2, child_2_1]
   end
 
@@ -15,6 +21,12 @@ class SimpleNestedSetTest < Test::Unit::TestCase
 
   attr_reader :nodes, :root, :child_1, :child_2, :child_2_1, :unrelated_root
 
+  test "setup builds up a valid nested set" do
+    assert_equal [nil,        1, 8, 0], [root.parent_id, root.lft, root.rgt, root.level]
+    assert_equal [root.id,    2, 3, 1], [child_1.parent_id, child_1.lft, child_1.rgt, child_1.level]
+    assert_equal [root.id,    4, 7, 1], [child_2.parent_id, child_2.lft, child_2.rgt, child_2.level]
+    assert_equal [child_2.id, 5, 6, 2], [child_2_1.parent_id, child_2_1.lft, child_2_1.rgt, child_2_1.level]
+  end
 
   # CLASS METHODS
 
@@ -54,7 +66,7 @@ class SimpleNestedSetTest < Test::Unit::TestCase
   end
 
   test "Node.leaves returns all leaves" do
-    assert_equal [child_1, child_2_1], Node.leaves(:scope_id => 1)
+    assert_equal [child_1, child_2_1].sort, Node.leaves(:scope_id => 1).sort
     assert_equal [unrelated_root], Node.leaves(:scope_id => 2)
   end
 
@@ -329,7 +341,7 @@ class SimpleNestedSetTest < Test::Unit::TestCase
     assert_equal child_2, child_2_1.right_sibling
   end
 
-  test "node.update_attributes(:right_id => '') makes the node the rightmost (amongst its siblings)" do
+  test "node.update_attributes(:right_id => '') makes the node the rightmost amongst its siblings" do
     child_1.update_attributes!(:right_id => '')
     assert_equal root, child_1.parent
     assert_equal child_2, child_1.left_sibling
@@ -450,5 +462,27 @@ class SimpleNestedSetTest < Test::Unit::TestCase
     Node.send(:after_move) { |node| parent_id = node.parent_id }
     child_2.move_to_left_of(child_1)
     assert_equal child_1.parent_id, parent_id
+  end
+
+
+  # ASSOCIATIONS
+
+  test "association.create moves the created node" do
+    owner = NodeOwner.create!
+    owner.nodes << root
+
+    node_1 = owner.nodes.create!(:parent_id => root.id, :scope_id => 1)
+    node_2 = owner.nodes.create!(:parent_id => node_1.id, :scope_id => 1)
+
+    assert_equal root, node_1.parent
+    assert_equal node_1, node_2.parent
+  end
+
+  test "node.children.create moves the created node" do
+    node_1 = root.children.create!(:parent_id => root.id, :scope_id => 1)
+    node_2 = root.children.create!(:parent_id => node_1.id, :scope_id => 1)
+
+    assert_equal root, node_1.parent
+    assert_equal node_1, node_2.parent
   end
 end

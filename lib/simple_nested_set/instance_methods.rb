@@ -3,16 +3,12 @@ require 'active_support/core_ext/hash/keys'
 module SimpleNestedSet
   module InstanceMethods
     def nested_set
-      @nested_set ||= nested_set_class.new(self)
+      @_nested_set ||= nested_set_class.new(self)
     end
 
-    # TODO refactor
-    def update_attributes(attributes)
-      nested_set.with_move_by_attributes(attributes) { super }
-    end
-
-    def update_attributes!(attributes)
-      nested_set.with_move_by_attributes(attributes) { super }
+    def attributes=(attributes)
+      @_nested_set_attributes = attributes.extract_nested_set_attributes!
+      super
     end
 
     # recursively populates the parent and children associations of self and

@@ -4,15 +4,16 @@ module SimpleNestedSet
       return if acts_as_nested_set?
 
       include SimpleNestedSet::InstanceMethods
-      extend SimpleNestedSet::ClassMethods
+      extend  SimpleNestedSet::ClassMethods
 
       define_callbacks :move, :terminator => "result == false"
 
-      before_validation lambda { |r| r.nested_set.init_as_node }
+      before_validation lambda { |r| r.nested_set.init_as_node }, :if => :new_record?
       before_destroy    lambda { |r| r.nested_set.prune_branch }
+      after_save        lambda { |r| r.nested_set.save! }
 
       belongs_to :parent, :class_name => self.name
-      has_many :children, :foreign_key => :parent_id, :class_name => class_of_active_record_descendant(self).name
+      has_many :children, :foreign_key => :parent_id, :class_name => self.name
 
       default_scope :order => :lft
 

@@ -10,14 +10,6 @@ module SimpleNestedSet
       set_callback(:move, :after, *args, &block)
     end
 
-    def create(attributes)
-      nested_set_class.with_move_by_attributes(attributes) { super }
-    end
-
-    def create!(attributes)
-      nested_set_class.with_move_by_attributes(attributes) { super }
-    end
-
     # Returns the first root node (with the given scope if any)
     def root(scope = nil)
       roots(scope).first

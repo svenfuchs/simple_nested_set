@@ -38,6 +38,10 @@ module SimpleNestedSet
           attributes.symbolize_keys!
           attributes.each { |key, value| attributes[key] = nil if value == 'null' }
 
+          [:parent, :left, :right].each do |key|
+            attributes[:"#{key}_id"] = attributes.delete(key).id if attributes.key?(key)
+          end
+
           # if left_id is given but blank, set right_id to leftmost sibling
           attributes[:right_id] = siblings.first.id if blank_given?(:left_id) && siblings.any?
 
