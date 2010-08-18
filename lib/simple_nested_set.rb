@@ -2,7 +2,7 @@ require 'active_record'
 require 'core_ext/hash/extract_nested_set_attributes'
 
 module SimpleNestedSet
-  ATTRIBUTES = [:parent, :parent_id, :left_id, :right_id]
+  ATTRIBUTES = [:parent, :parent_id, :left_id, :right_id, :lft, :rgt, :level, :path]
 
   autoload :ActMacro,        'simple_nested_set/act_macro'
   autoload :ClassMethods,    'simple_nested_set/class_methods'

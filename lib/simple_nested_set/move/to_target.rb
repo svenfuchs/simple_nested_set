@@ -70,7 +70,7 @@ module SimpleNestedSet
           path = (
             SELECT GROUP_CONCAT(slug, '/')
             FROM #{table_name} as l
-            WHERE l.lft <= #{table_name}.lft AND l.rgt >= #{table_name}.rgt AND parent_id IS NOT NULL
+            WHERE l.lft <= #{table_name}.lft AND l.rgt >= #{table_name}.rgt
           )
         sql
       end

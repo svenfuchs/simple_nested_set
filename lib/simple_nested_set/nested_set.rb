@@ -28,7 +28,7 @@ module SimpleNestedSet
       @node = args.first if args.size == 1
       @where_values = self.class.scope(node).instance_variable_get(:@where_values) if node
     end
-    
+
     def save!
       attributes = node.instance_variable_get(:@_nested_set_attributes)
       node.instance_variable_set(:@_nested_set_attributes, nil)
@@ -42,7 +42,11 @@ module SimpleNestedSet
 
     # reload left, right, and parent
     def reload
-      node.reload(:select => 'lft, rgt, parent_id') unless node.new_record?
+      node.reload(:select => attribute_names.join(', ')) unless node.new_record? # FIXME reloading doesn't seem to work?
+    end
+
+    def attribute_names
+      @attribute_names ||= node.attribute_names.select { |attribute| ATTRIBUTES.include?(attribute.to_sym) }
     end
 
     def populate_associations(nodes)
