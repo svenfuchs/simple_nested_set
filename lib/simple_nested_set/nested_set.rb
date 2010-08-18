@@ -25,9 +25,12 @@ module SimpleNestedSet
       def with_move_by_attributes(attributes, node = nil)
         node_class.transaction do
           nested_set_attributes = extract_nested_set_attributes!(attributes)
-          result = yield
-          (node || result).nested_set.move_by_attributes(nested_set_attributes) unless nested_set_attributes.empty?
-          result
+          yield.tap do |result|
+            unless nested_set_attributes.empty?
+              node ||= result
+              node.nested_set.move_by_attributes(nested_set_attributes)
+            end
+          end
         end
       end
 
@@ -75,6 +78,7 @@ module SimpleNestedSet
         max_right = maximum(:rgt) || 0
         node.lft, node.rgt = max_right + 1, max_right + 2
       end
+      true
     end
 
     # Prunes a branch off of the tree, shifting all of the elements on the right

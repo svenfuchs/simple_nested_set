@@ -14,9 +14,14 @@ module SimpleNestedSet
       end
 
       def perform
-        unless bound == node.rgt || bound == node.lft # there would be no change
-          reload
-          nested_set.transaction { nested_set.update_all(query) }
+        node.run_callbacks(:move) do
+          # reload
+          unless bound == node.rgt || bound == node.lft # there would be no change
+            nested_set.transaction do
+              # node.save!
+              nested_set.update_all(query)
+            end
+          end
           reload
         end
       end

@@ -2,6 +2,14 @@ require 'active_support/core_ext/hash/slice'
 
 module SimpleNestedSet
   module ClassMethods
+    def before_move(*args, &block)
+      set_callback(:move, :before, *args, &block)
+    end
+
+    def after_move(*args, &block)
+      set_callback(:move, :after, *args, &block)
+    end
+
     def create(attributes)
       nested_set_class.with_move_by_attributes(attributes) { super }
     end
