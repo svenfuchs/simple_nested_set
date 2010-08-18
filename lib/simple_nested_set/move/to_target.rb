@@ -17,11 +17,62 @@ module SimpleNestedSet
         node.run_callbacks(:move) do
           unless bound == node.rgt || bound == node.lft # there would be no change
             nested_set.transaction do
-              nested_set.update_all(query)
+              # puts ActiveRecord::Base.send(:sanitize_sql_array, query)
+              update_structure!
+              update_denormalizations!
             end
           end
           reload
         end
+      end
+
+      def update_structure!
+        sql = <<-sql
+          lft = CASE
+            WHEN lft BETWEEN :a AND :b THEN lft + :d - :b
+            WHEN lft BETWEEN :c AND :d THEN lft + :a - :c
+            ELSE lft END,
+
+          rgt = CASE
+            WHEN rgt BETWEEN :a AND :b THEN rgt + :d - :b
+            WHEN rgt BETWEEN :c AND :d THEN rgt + :a - :c
+            ELSE rgt END,
+
+          parent_id = CASE
+            WHEN id = :id THEN :parent_id
+            ELSE parent_id END
+        sql
+
+        a, b, c, d = boundaries
+        sql = [sql, { :a => a, :b => b, :c => c, :d => d, :id => id, :parent_id => parent_id }]
+        nested_set.update_all(sql)
+      end
+
+      def update_denormalizations!
+        sql = []
+        sql << denormalize_level_query if node.has_attribute?(:level)
+        sql << denormalize_path_query  if node.has_attribute?(:path)
+        nested_set.update_all(sql.join(',')) unless sql.blank?
+      end
+
+      def denormalize_level_query
+        <<-sql
+          level = (
+            SELECT count(id)
+            FROM #{table_name} as l
+            WHERE l.lft < #{table_name}.lft AND l.rgt > #{table_name}.rgt
+          )
+        sql
+      end
+
+      def denormalize_path_query
+        <<-sql
+          path = (
+            SELECT GROUP_CONCAT(slug, '/')
+            FROM #{table_name} as l
+            WHERE l.lft <= #{table_name}.lft AND l.rgt >= #{table_name}.rgt AND parent_id IS NOT NULL
+          )
+        sql
       end
 
       def reload
@@ -62,33 +113,6 @@ module SimpleNestedSet
 
       def roots
         @roots ||= node.nested_set.roots
-      end
-
-      def query
-        sql = <<-sql
-          lft = CASE
-            WHEN lft BETWEEN :a AND :b THEN lft + :d - :b
-            WHEN lft BETWEEN :c AND :d THEN lft + :a - :c
-            ELSE lft END,
-
-          rgt = CASE
-            WHEN rgt BETWEEN :a AND :b THEN rgt + :d - :b
-            WHEN rgt BETWEEN :c AND :d THEN rgt + :a - :c
-            ELSE rgt END,
-
-          parent_id = CASE
-            WHEN id = :id THEN :parent_id
-            ELSE parent_id END,
-
-          level = (
-            SELECT count(id)
-            FROM #{table_name} as t
-            WHERE t.lft < #{table_name}.lft AND t.rgt > #{table_name}.rgt
-          )
-        sql
-        # TODO name a, b, c, d in a more reasonable way
-        a, b, c, d = boundaries
-        [sql, { :a => a, :b => b, :c => c, :d => d, :id => id, :parent_id => parent_id }]
       end
 
       def table_name

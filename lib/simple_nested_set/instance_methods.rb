@@ -18,11 +18,6 @@ module SimpleNestedSet
       self
     end
 
-    # Returns the level of this object in the tree, root level is 0
-    def level
-      parent_id.nil? ? 0 : ancestors.count
-    end
-
     # Returns true if this is a root node.
     def root?
       parent_id.blank?

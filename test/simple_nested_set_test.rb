@@ -3,15 +3,13 @@ require File.expand_path('../test_helper', __FILE__)
 class SimpleNestedSetTest < Test::Unit::TestCase
   def setup
     super
-    @root      = Node.create!(:name => 'root',      :scope_id => 1)
-    @child_1   = Node.create!(:name => 'child_1',   :scope_id => 1, :parent_id => root.id)
-    @child_2   = Node.create!(:name => 'child_2',   :scope_id => 1, :parent_id => root.id)
-    @child_2_1 = Node.create!(:name => 'child_2_1', :scope_id => 1, :parent_id => child_2.id)
-    @unrelated_root = Node.create!(:name => 'unrelated_root', :scope_id => 2)
+    @root      = Node.create!(:slug => 'root',      :scope_id => 1)
+    @child_1   = Node.create!(:slug => 'child_1',   :scope_id => 1, :parent_id => root.id)
+    @child_2   = Node.create!(:slug => 'child_2',   :scope_id => 1, :parent_id => root.id)
+    @child_2_1 = Node.create!(:slug => 'child_2_1', :scope_id => 1, :parent_id => child_2.id)
+    @unrelated_root = Node.create!(:slug => 'unrelated_root', :scope_id => 2)
 
-    [root, child_1, child_2, child_2_1].map(&:reload)
-
-    @nodes = [root, child_1, child_2, child_2_1]
+    @nodes = [root, child_1, child_2, child_2_1].map(&:reload)
   end
 
   def teardown

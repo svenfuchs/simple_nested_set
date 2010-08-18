@@ -10,13 +10,14 @@ ActiveRecord::Schema.define(:version => 1) do
 
   create_table "nodes", :force => true do |t|
     t.references :node_owner
-    t.string  :name
     t.string  :type
     t.integer :scope_id
     t.integer :parent_id
     t.integer :level
     t.integer :lft
     t.integer :rgt
+    t.string  :slug
+    t.string  :path
   end
 end unless BaseNode.table_exists?
 
