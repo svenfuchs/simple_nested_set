@@ -8,9 +8,9 @@ module SimpleNestedSet
 
       define_callbacks :move, :terminator => "result == false"
 
-      before_validation lambda { |r| r.nested_set.init_as_node }, :if => :new_record?
-      before_destroy    lambda { |r| r.nested_set.prune_branch }
-      after_save        lambda { |r| r.nested_set.save! }
+      before_create  lambda { |r| r.nested_set.init_as_node }
+      before_destroy lambda { |r| r.nested_set.prune_branch }
+      after_save     lambda { |r| r.nested_set.save! }
 
       belongs_to :parent, :class_name => self.name
       has_many :children, :foreign_key => :parent_id, :class_name => self.name

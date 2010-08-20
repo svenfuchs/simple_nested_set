@@ -33,6 +33,16 @@ module SimpleNestedSet
       attributes = node.instance_variable_get(:@_nested_set_attributes)
       node.instance_variable_set(:@_nested_set_attributes, nil)
       move_by_attributes(attributes) unless attributes.blank?
+      denormalize!
+    end
+
+    # FIXME we don't always want to call this on after_save, do we? it's only relevant when 
+    # either the structure or the slug has changed
+    def denormalize!
+      sql = []
+      sql << denormalize_level_query if node.has_attribute?(:level)
+      sql << denormalize_path_query  if node.has_attribute?(:path)
+      update_all(sql.join(',')) unless sql.blank?
     end
 
     # Returns true if the node has the same scope as the given node
@@ -83,6 +93,24 @@ module SimpleNestedSet
 
     def move_to(target, position)
       Move::ToTarget.new(node, target, position).perform
+    end
+
+    def denormalize_level_query
+      query = arel_table.as(:l)
+      query = query.project('count(id)').
+              where(query[:lft].lt(arel_table[:lft])).
+              where(query[:rgt].gt(arel_table[:rgt])).
+              where(where_clauses.map { |clause| clause.gsub(table_name, 'l') })
+      "level = (#{query.to_sql})"
+    end
+
+    def denormalize_path_query
+      query = arel_table.as(:l)
+      query = query.project("GROUP_CONCAT(slug, '/')").
+              where(query[:lft].lteq(arel_table[:lft])).
+              where(query[:rgt].gteq(arel_table[:rgt])).
+              where(where_clauses.map { |clause| clause.gsub(table_name, 'l') })
+      "path = (#{query.to_sql})"
     end
   end
 end

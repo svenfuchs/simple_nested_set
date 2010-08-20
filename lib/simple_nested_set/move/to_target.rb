@@ -15,13 +15,11 @@ module SimpleNestedSet
 
       def perform
         node.run_callbacks(:move) do
-          unless bound == node.rgt || bound == node.lft # there would be no change
+          # unless bound == node.rgt || bound == node.lft # there would be no change
             nested_set.transaction do
-              # puts ActiveRecord::Base.send(:sanitize_sql_array, query)
               update_structure!
-              update_denormalizations!
             end
-          end
+          # end
           reload
         end
       end
@@ -45,34 +43,9 @@ module SimpleNestedSet
 
         a, b, c, d = boundaries
         sql = [sql, { :a => a, :b => b, :c => c, :d => d, :id => id, :parent_id => parent_id }]
+
+        # puts ActiveRecord::Base.send(:sanitize_sql_array, sql)
         nested_set.update_all(sql)
-      end
-
-      def update_denormalizations!
-        sql = []
-        sql << denormalize_level_query if node.has_attribute?(:level)
-        sql << denormalize_path_query  if node.has_attribute?(:path)
-        nested_set.update_all(sql.join(',')) unless sql.blank?
-      end
-
-      def denormalize_level_query
-        <<-sql
-          level = (
-            SELECT count(id)
-            FROM #{table_name} as l
-            WHERE l.lft < #{table_name}.lft AND l.rgt > #{table_name}.rgt
-          )
-        sql
-      end
-
-      def denormalize_path_query
-        <<-sql
-          path = (
-            SELECT GROUP_CONCAT(slug, '/')
-            FROM #{table_name} as l
-            WHERE l.lft <= #{table_name}.lft AND l.rgt >= #{table_name}.rgt
-          )
-        sql
       end
 
       def reload
