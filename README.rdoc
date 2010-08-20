@@ -1,0 +1,13 @@
+= SimpleNestedSet
+
+SimpleNestedSet is a gem which gives the ability to handle nested sets in ActiveRecord-Objects
+
+== Installation
+
+SimpleNestedSet is Rails3-ready, so "Installation" is done by adding
+
+  gem 'simple_nested_set'
+
+to your Gemfile.
+
+
