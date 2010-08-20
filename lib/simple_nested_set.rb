@@ -8,6 +8,7 @@ module SimpleNestedSet
   autoload :ClassMethods,    'simple_nested_set/class_methods'
   autoload :InstanceMethods, 'simple_nested_set/instance_methods'
   autoload :NestedSet,       'simple_nested_set/nested_set'
+  autoload :SqlAbstraction,  'simple_nested_set/sql_abstraction.rb'
 
   module Move
     autoload :ByAttributes,  'simple_nested_set/move/by_attributes'
@@ -16,8 +17,6 @@ module SimpleNestedSet
     autoload :Impossible,    'simple_nested_set/move/protection'
     autoload :Inconsistent,  'simple_nested_set/move/protection'
   end
-
-  autoload :DbHelper,        'simple_nested_set/db_helper.rb'
 end
 
 ActiveRecord::Base.send :extend, SimpleNestedSet::ActMacro

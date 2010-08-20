@@ -1,5 +1,7 @@
 module SimpleNestedSet
   class NestedSet < ActiveRecord::Relation
+    include SqlAbstraction
+
     class_inheritable_accessor :node_class, :scope_names
 
     class << self
@@ -106,7 +108,7 @@ module SimpleNestedSet
 
     def denormalize_path_query
       query = arel_table.as(:l)
-      query = query.project(DbHelper.group_concat(db_adapter)).
+      query = query.project(group_concat(db_adapter, :slug)).
               where(query[:lft].lteq(arel_table[:lft])).
               where(query[:rgt].gteq(arel_table[:rgt])).
               where(where_clauses.map { |clause| clause.gsub(table_name, 'l') })

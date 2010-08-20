@@ -509,30 +509,31 @@ class SimpleNestedSetTest < Test::Unit::TestCase
 
   # DATABASE ADAPTERS
 
-  test "a simple database helper" do
-    assert defined?(SimpleNestedSet::DbHelper), "DbHelper should be defined"
-    assert_respond_to SimpleNestedSet::DbHelper, :group_concat
+  test "SqlAbstraction defined" do
+    assert defined?(SimpleNestedSet::SqlAbstraction), "SqlAbstraction should be defined"
+  end
 
-    assert_raise ArgumentError do
-      SimpleNestedSet::DbHelper.group_concat()
-    end
-    assert_raise ArgumentError do
-      SimpleNestedSet::DbHelper.group_concat(:something)
-    end
+  test "can call included group_concat" do
     assert_nothing_raised ArgumentError do
       [:sqlite, :sqlite3, :mysql, :postgresql].each do |db|
-        SimpleNestedSet::DbHelper.group_concat(db)
+        root.nested_set.group_concat(db, 'slug')
       end
     end
+  end
 
-    assert_nothing_raised Exception, "concating a string aggregate works with different databases" do
-      assert_equal "GROUP_CONCAT(slug, '/')", SimpleNestedSet::DbHelper.group_concat(:sqlite)
-      assert_equal "GROUP_CONCAT(field, '/')", SimpleNestedSet::DbHelper.group_concat(:sqlite, 'field')
-      assert_equal "GROUP_CONCAT(field, ',')", SimpleNestedSet::DbHelper.group_concat(:sqlite, 'field', ',')
+  test "concating a string aggregate abstracted for sqlite" do
+    assert_equal "GROUP_CONCAT(slug, '/')", root.nested_set.group_concat(:sqlite, 'slug')
+  end
 
-      assert_equal "GROUP_CONCAT(`field`, ',')", SimpleNestedSet::DbHelper.group_concat(:mysql, 'field', ',')
+  test "concating a string aggregate abstracted for sqlite w/ a custom separator" do
+    assert_equal "GROUP_CONCAT(slug, ',')", root.nested_set.group_concat(:sqlite, 'slug', ',')
+  end
 
-      assert_equal "array_to_string(array_agg(\"field\"), ',')", SimpleNestedSet::DbHelper.group_concat(:postgresql, 'field', ',')
-    end
+  test "concating a string aggregate abstracted for mysql" do
+    assert_equal "GROUP_CONCAT(`slug`, '/')", root.nested_set.group_concat(:mysql, 'slug')
+  end
+
+  test "concating a string aggregate abstracted for postgres" do
+    assert_equal "array_to_string(array_agg(\"slug\"), '/')", root.nested_set.group_concat(:postgresql, 'slug')
   end
 end
