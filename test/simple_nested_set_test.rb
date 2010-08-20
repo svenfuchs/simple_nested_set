@@ -507,4 +507,32 @@ class SimpleNestedSetTest < Test::Unit::TestCase
   end
 
 
+  # DATABASE ADAPTERS
+
+  test "a simple database helper" do
+    assert defined?(SimpleNestedSet::DbHelper), "DbHelper should be defined"
+    assert_respond_to SimpleNestedSet::DbHelper, :group_concat
+
+    assert_raise ArgumentError do
+      SimpleNestedSet::DbHelper.group_concat()
+    end
+    assert_raise ArgumentError do
+      SimpleNestedSet::DbHelper.group_concat(:something)
+    end
+    assert_nothing_raised ArgumentError do
+      [:sqlite, :sqlite3, :mysql, :postgresql].each do |db|
+        SimpleNestedSet::DbHelper.group_concat(db)
+      end
+    end
+
+    assert_nothing_raised Exception, "concating a string aggregate works with different databases" do
+      assert_equal "GROUP_CONCAT(slug, '/')", SimpleNestedSet::DbHelper.group_concat(:sqlite)
+      assert_equal "GROUP_CONCAT(field, '/')", SimpleNestedSet::DbHelper.group_concat(:sqlite, 'field')
+      assert_equal "GROUP_CONCAT(field, ',')", SimpleNestedSet::DbHelper.group_concat(:sqlite, 'field', ',')
+
+      assert_equal "GROUP_CONCAT(`field`, ',')", SimpleNestedSet::DbHelper.group_concat(:mysql, 'field', ',')
+
+      assert_equal "array_to_string(array_agg(\"field\"), ',')", SimpleNestedSet::DbHelper.group_concat(:postgresql, 'field', ',')
+    end
+  end
 end

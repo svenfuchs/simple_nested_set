@@ -16,6 +16,8 @@ module SimpleNestedSet
     autoload :Impossible,    'simple_nested_set/move/protection'
     autoload :Inconsistent,  'simple_nested_set/move/protection'
   end
+
+  autoload :DbHelper,        'simple_nested_set/db_helper.rb'
 end
 
 ActiveRecord::Base.send :extend, SimpleNestedSet::ActMacro

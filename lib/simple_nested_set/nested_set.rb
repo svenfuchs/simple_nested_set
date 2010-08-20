@@ -36,7 +36,7 @@ module SimpleNestedSet
       denormalize!
     end
 
-    # FIXME we don't always want to call this on after_save, do we? it's only relevant when 
+    # FIXME we don't always want to call this on after_save, do we? it's only relevant when
     # either the structure or the slug has changed
     def denormalize!
       sql = []
@@ -106,11 +106,15 @@ module SimpleNestedSet
 
     def denormalize_path_query
       query = arel_table.as(:l)
-      query = query.project("GROUP_CONCAT(slug, '/')").
+      query = query.project(DbHelper.group_concat(db_adapter)).
               where(query[:lft].lteq(arel_table[:lft])).
               where(query[:rgt].gteq(arel_table[:rgt])).
               where(where_clauses.map { |clause| clause.gsub(table_name, 'l') })
       "path = (#{query.to_sql})"
+    end
+
+    def db_adapter
+      node.class.connection.instance_variable_get('@config')[:adapter].to_sym
     end
   end
 end
