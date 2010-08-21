@@ -21,6 +21,12 @@ module SimpleNestedSet
           c.merge(name => scope.respond_to?(name) ? scope.send(name) : scope[name])
         end
       end
+
+      def extract_attributes!(attributes)
+        attributes.slice(*SimpleNestedSet::ATTRIBUTES).tap do
+          attributes.except!(*(SimpleNestedSet::ATTRIBUTES - [:path]))
+        end
+      end
     end
 
     attr_reader :node

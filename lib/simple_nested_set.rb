@@ -1,5 +1,4 @@
 require 'active_record'
-require 'core_ext/hash/extract_nested_set_attributes'
 
 module SimpleNestedSet
   ATTRIBUTES = [:parent, :parent_id, :left_id, :right_id, :lft, :rgt, :level, :path]
