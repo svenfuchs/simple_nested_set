@@ -17,6 +17,10 @@ module SimpleNestedSet
     autoload :Impossible,    'simple_nested_set/move/protection'
     autoload :Inconsistent,  'simple_nested_set/move/protection'
   end
+
+  module Rebuild
+    autoload :FromPaths,     'simple_nested_set/rebuild/from_paths'
+  end
 end
 
 ActiveRecord::Base.send :extend, SimpleNestedSet::ActMacro

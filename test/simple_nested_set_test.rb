@@ -1,6 +1,9 @@
 require File.expand_path('../test_helper', __FILE__)
 
 class SimpleNestedSetTest < Test::Unit::TestCase
+  include SimpleNestedSet
+  include SqlAbstraction
+
   def setup
     super
     @root      = Node.create!(:slug => 'root',      :scope_id => 1)
@@ -506,34 +509,49 @@ class SimpleNestedSetTest < Test::Unit::TestCase
     assert_equal ['bar', 3, 4, 'bar'], [bar.slug, bar.lft, bar.rgt, bar.path]
   end
 
+  # REBUILD NESTED SET
 
-  # DATABASE ADAPTERS
+  test "rebuild_from_path" do
+    child_2_2 = Node.create!(:slug => 'child_2_2', :scope_id => 1, :parent_id => child_2.id)
+    child_3   = Node.create!(:slug => 'child_3',   :scope_id => 1, :parent_id => root.id)
+    root_2    = Node.create!(:slug => 'root_2',   :scope_id => 1)
 
-  test "SqlAbstraction defined" do
-    assert defined?(SimpleNestedSet::SqlAbstraction), "SqlAbstraction should be defined"
+    Node.update_all(:lft => 0, :rgt => 0)
+    root.nested_set.rebuild_from_paths!
+    [root, child_1, child_2, child_2_1, child_2_2, child_3, root_2].map(&:reload)
+
+    assert_equal [1,  12], [root.lft, root.rgt]
+    assert_equal [2,  3 ], [child_1.lft, child_1.rgt]
+    assert_equal [4,  9 ], [child_2.lft, child_2.rgt]
+    assert_equal [5,  6 ], [child_2_1.lft, child_2_1.rgt]
+    assert_equal [7,  8 ], [child_2_2.lft, child_2_2.rgt]
+    assert_equal [10, 11], [child_3.lft, child_3.rgt]
+    assert_equal [13, 14], [root_2.lft, root_2.rgt]
   end
+
+  # SQL ABSTRACTION
 
   test "can call included group_concat" do
     assert_nothing_raised ArgumentError do
       [:sqlite, :sqlite3, :mysql, :postgresql].each do |db|
-        root.nested_set.group_concat(db, 'slug')
+        group_concat(db, 'slug')
       end
     end
   end
 
   test "concating a string aggregate abstracted for sqlite" do
-    assert_equal "GROUP_CONCAT(slug, '/')", root.nested_set.group_concat(:sqlite, 'slug')
+    assert_equal "GROUP_CONCAT(slug, '/')", group_concat(:sqlite, 'slug')
   end
 
   test "concating a string aggregate abstracted for sqlite w/ a custom separator" do
-    assert_equal "GROUP_CONCAT(slug, ',')", root.nested_set.group_concat(:sqlite, 'slug', ',')
+    assert_equal "GROUP_CONCAT(slug, ',')", group_concat(:sqlite, 'slug', ',')
   end
 
   test "concating a string aggregate abstracted for mysql" do
-    assert_equal "GROUP_CONCAT(`slug`, '/')", root.nested_set.group_concat(:mysql, 'slug')
+    assert_equal "GROUP_CONCAT(`slug`, '/')", group_concat(:mysql, 'slug')
   end
 
   test "concating a string aggregate abstracted for postgres" do
-    assert_equal "array_to_string(array_agg(\"slug\"), '/')", root.nested_set.group_concat(:postgresql, 'slug')
+    assert_equal "array_to_string(array_agg(\"slug\"), '/')", group_concat(:postgresql, 'slug')
   end
 end

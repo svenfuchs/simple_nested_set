@@ -97,6 +97,10 @@ module SimpleNestedSet
       Move::ToTarget.new(node, target, position).perform
     end
 
+    def rebuild_from_paths!
+      Rebuild::FromPaths.new.run(self)
+    end
+
     def denormalize_level_query
       query = arel_table.as(:l)
       query = query.project('count(id)').
