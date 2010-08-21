@@ -160,5 +160,10 @@ module SimpleNestedSet
     def move_to_right_of(node)
       nested_set.move_to(node, :right)
     end
+
+    # Makes this node to the given path
+    def move_to_path(path)
+      nested_set.move_to_path(path)
+    end
   end
 end

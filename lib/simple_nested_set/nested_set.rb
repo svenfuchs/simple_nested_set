@@ -58,9 +58,12 @@ module SimpleNestedSet
       scope_names.all? { |scope| node.send(scope) == other.send(scope) }
     end
 
-    # reload left, right, and parent
+    # reload nested set attributes
     def reload
-      node.reload(:select => attribute_names.join(', ')) unless node.new_record? # FIXME reloading doesn't seem to work?
+      reloaded = unscoped { find(node.id, :select => [:parent_id, :lft, :rgt, :level, :path]) }
+      node.instance_eval { @attributes.merge!(reloaded.instance_variable_get(:@attributes)) }
+      node.parent = nil if node.parent_id.nil?
+      node.children.reset
     end
 
     def attribute_names
@@ -97,6 +100,12 @@ module SimpleNestedSet
 
     def move_by_attributes(attributes)
       Move::ByAttributes.new(node, attributes).perform
+    end
+
+    def move_to_path(path)
+      node.path, parent_path = path, path.split('/')[0..-2].join('/')
+      parent = parent_path.empty? ? nil : node.nested_set.where(:path => parent_path).first
+      node.move_to_child_of(parent)
     end
 
     def move_to(target, position)

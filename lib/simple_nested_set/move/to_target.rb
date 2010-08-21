@@ -15,11 +15,9 @@ module SimpleNestedSet
 
       def perform
         node.run_callbacks(:move) do
-          # unless bound == node.rgt || bound == node.lft # there would be no change
-            nested_set.transaction do
-              update_structure!
-            end
-          # end
+          unless bound == node.rgt || bound == node.lft # there would be no change
+            nested_set.transaction { update_structure! }
+          end
           reload
         end
       end

@@ -1,18 +1,9 @@
 module SimpleNestedSet
   module Move
     class ByAttributes
-      class << self
-        def attribute_reader(*names)
-          names.each do |name|
-            define_method(name) { attributes[name].blank? ? nil : attributes[name].to_i }
-          end
-        end
-      end
-
       include Protection
 
       attr_reader :node, :attributes
-      attribute_reader :parent_id, :left_id, :right_id
 
       delegate :nested_set, :to => :node
 
@@ -23,7 +14,9 @@ module SimpleNestedSet
       end
 
       def perform
-        if left_id && left_id != node.id
+        if path && node.path_changed?
+          node.move_to_path(path)
+        elsif left_id && left_id != node.id
           node.move_to_right_of(left_id)
         elsif right_id && right_id != node.id
           node.move_to_left_of(right_id)
@@ -33,6 +26,22 @@ module SimpleNestedSet
       end
 
       protected
+
+        def parent_id
+          attributes[:parent_id].blank? ? nil : attributes[:parent_id].to_i
+        end
+
+        def left_id
+          attributes[:left_id].blank? ? nil : attributes[:left_id].to_i
+        end
+
+        def right_id
+          attributes[:right_id].blank? ? nil : attributes[:right_id].to_i
+        end
+
+        def path
+          attributes[:path].blank? ? nil : attributes[:path]
+        end
 
         def normalize_attributes!
           attributes.symbolize_keys!

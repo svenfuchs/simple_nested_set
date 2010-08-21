@@ -281,6 +281,16 @@ class SimpleNestedSetTest < Test::Unit::TestCase
 
   # MOVING
 
+  test "node.move_path moves the node to the given path (w/ a root path)" do
+    child_1.move_to_path(root.path)
+    assert child_1.root?
+  end
+
+  test "node.move_path moves the node to the given path (w/ a non-root path)" do
+    child_1.move_to_path("#{child_2_1.path}/#{child_1.slug}")
+    assert_equal child_2_1, child_1.parent
+  end
+
   test "node.move_left moves the node to the left of its left sibling if any" do
     child_2.move_left
     assert_equal child_1, child_2.right_sibling
