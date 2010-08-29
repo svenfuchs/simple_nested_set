@@ -44,7 +44,7 @@ module SimpleNestedSet
         end
 
         def normalize_attributes!
-          attributes.symbolize_keys!
+          attributes.symbolize_keys! if attributes.respond_to?(:symbolize_keys!)
           attributes.each { |key, value| attributes[key] = nil if value == 'null' }
 
           [:parent, :left, :right].each do |key|
