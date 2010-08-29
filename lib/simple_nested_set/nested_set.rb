@@ -25,7 +25,7 @@ module SimpleNestedSet
       def extract_attributes!(attributes)
         attributes.slice(*SimpleNestedSet::ATTRIBUTES).tap do
           attributes.except!(*(SimpleNestedSet::ATTRIBUTES - [:path]))
-        end
+        end if attributes.respond_to?(:slice)
       end
     end
 
