@@ -6,9 +6,9 @@ module SimpleNestedSet
       @_nested_set ||= nested_set_class.new(self)
     end
 
-    def attributes=(attributes)
+    def attributes=(attributes, *args)
       @_nested_set_attributes = nested_set_class.extract_attributes!(attributes)
-      super(attributes)
+      super(attributes, *args)
     end
 
     # recursively populates the parent and children associations of self and
