@@ -20,7 +20,7 @@ module SimpleNestedSet
           node.move_to_right_of(left_id)
         elsif right_id && right_id != node.id
           node.move_to_left_of(right_id)
-        elsif parent_id != node.parent_id
+        elsif parent_id && parent_id != node.parent_id
           node.move_to_child_of(parent_id)
         end
       end
