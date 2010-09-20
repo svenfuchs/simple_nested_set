@@ -60,7 +60,11 @@ module SimpleNestedSet
 
     # reload nested set attributes
     def reload
-      reloaded = unscoped { find(node.id, :select => [:parent_id, :lft, :rgt, :level, :path]) }
+      columns  = [:parent_id, :lft, :rgt]
+      columns << :level if node.has_attribute?(:level)
+      columns << :path  if node.has_attribute?(:path)
+
+      reloaded = unscoped { find(node.id, :select => columns) }
       node.instance_eval { @attributes.merge!(reloaded.instance_variable_get(:@attributes)) }
       node.parent = nil if node.parent_id.nil?
       node.children.reset
