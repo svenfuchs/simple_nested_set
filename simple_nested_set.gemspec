@@ -7,15 +7,19 @@ Gem::Specification.new do |s|
   s.authors      = ["Sven Fuchs"]
   s.email        = "svenfuchs@artweb-design.de"
   s.homepage     = "http://github.com/svenfuchs/simple_nested_set"
-  s.summary      = "[summary]"
-  s.description  = "[description]"
+  s.summary      = "a simple to use nested set solution for ActiveRecord 3"
+  s.description  = <<-EOD
+SimpleNestedSet is a gem which gives the ability to handle nested sets in ActiveRecord-Objects
+
+It is built upon ActiveRecord3 and therefore Rails3-ready
+  EOD
 
   s.files        = `git ls-files {app,lib}`.split("\n")
   s.platform     = Gem::Platform::RUBY
   s.require_path = 'lib'
   s.rubyforge_project = '[none]'
 
-  s.add_dependency             'activerecord', '>= 3.0.0.beta4'
+  s.add_dependency             'activerecord', '~> 3.0.0'
   s.add_dependency             'activesupport'
 
   s.add_development_dependency 'database_cleaner'
