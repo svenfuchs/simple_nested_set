@@ -153,12 +153,20 @@ module SimpleNestedSet
 
     # Move the node to the left of another node
     def move_to_left_of(node)
-      nested_set.move_to(node, :left)
+      if node
+        nested_set.move_to(node, :left)
+      elsif left_most = siblings.first
+        move_to_right_of(left_most)
+      end
     end
 
     # Move the node to the left of another node
     def move_to_right_of(node)
-      nested_set.move_to(node, :right)
+      if node
+        nested_set.move_to(node, :right)
+      elsif right_most = siblings.last
+        move_to_left_of(right_most)
+      end
     end
 
     # Makes this node to the given path
