@@ -1,4 +1,5 @@
 require 'active_record'
+require 'simple_nested_set/patches/arel_table_initialization'
 
 module SimpleNestedSet
   ATTRIBUTES = [:parent, :parent_id, :left_id, :right_id, :lft, :rgt, :level, :path]

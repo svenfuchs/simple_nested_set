@@ -21,6 +21,7 @@ It is built upon ActiveRecord3 and therefore Rails3-ready
 
   s.add_dependency             'activerecord', '~> 3.0.0'
   s.add_dependency             'activesupport'
+  s.add_dependency             'gem_patching'
 
   s.add_development_dependency 'database_cleaner'
   s.add_development_dependency 'test_declarative'
