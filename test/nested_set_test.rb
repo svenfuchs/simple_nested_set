@@ -1,6 +1,6 @@
 require File.expand_path('../test_helper', __FILE__)
 
-class SimpleNestedSetTest < Test::Unit::TestCase
+class NestedSetTest < Test::Unit::TestCase
   include SimpleNestedSet
   include SqlAbstraction
 
@@ -11,10 +11,6 @@ class SimpleNestedSetTest < Test::Unit::TestCase
     @child_2   = Node.create!(:slug => 'child_2',   :scope_id => 1, :parent_id => root.id)
     @child_2_1 = Node.create!(:slug => 'child_2_1', :scope_id => 1, :parent_id => child_2.id)
 
-    # @root      = Node.create!(:slug => 'root',      :scope_id => 1)
-    # @child_1   = Node.create!(:slug => 'child_1',   :scope_id => 1, :parent_id => root.id)
-    # @child_2   = Node.create!(:slug => 'child_2',   :scope_id => 1, :parent_id => root.id)
-    # @child_2_1 = Node.create!(:slug => 'child_2_1', :scope_id => 1, :parent_id => child_2.id)
     @unrelated_root = Node.create!(:slug => 'unrelated_root', :scope_id => 2)
 
     @nodes = [root, child_1, child_2, child_2_1].map(&:reload)

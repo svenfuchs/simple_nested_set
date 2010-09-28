@@ -3,8 +3,11 @@ module SimpleNestedSet
     def acts_as_nested_set(options = {})
       return if acts_as_nested_set?
 
-      include SimpleNestedSet::InstanceMethods
       extend  SimpleNestedSet::ClassMethods
+      extend  SimpleNestedSet::Inspect
+
+      include SimpleNestedSet::InstanceMethods
+      include SimpleNestedSet::Inspect
 
       define_callbacks :move, :terminator => "result == false"
 

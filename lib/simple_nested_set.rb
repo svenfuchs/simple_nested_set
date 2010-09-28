@@ -5,6 +5,7 @@ module SimpleNestedSet
 
   autoload :ActMacro,        'simple_nested_set/act_macro'
   autoload :ClassMethods,    'simple_nested_set/class_methods'
+  autoload :Inspect,         'simple_nested_set/inspect'
   autoload :InstanceMethods, 'simple_nested_set/instance_methods'
   autoload :NestedSet,       'simple_nested_set/nested_set'
   autoload :SqlAbstraction,  'simple_nested_set/sql_abstraction.rb'

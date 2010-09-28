@@ -21,11 +21,10 @@ ActiveRecord::Base.establish_connection(:adapter => 'sqlite3', :database => ':me
 
 DatabaseCleaner.strategy = :truncation
 
-class Test::Unit::TestCase
-  def setup
-    load Pathname.local('fixtures.rb')
-  end
 
+load Pathname.local('fixtures.rb')
+
+class Test::Unit::TestCase
   def teardown
     DatabaseCleaner.clean
   end

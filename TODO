@@ -1,2 +1,5 @@
++ inspect_tree: draw the nested set to the console
+
 - make attributes= aware of passed :children => [] and :child_ids => []
 - add rebuild_from_parent_id
+- improve inspect_tree to make it more unix tree like
