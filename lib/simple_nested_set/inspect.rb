@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module SimpleNestedSet
   module Inspect
     def inspect_tree(attributes = [:id, :lft, :rgt, :parent_id, :slug, :path, :level])

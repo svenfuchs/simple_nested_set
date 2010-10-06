@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require File.expand_path('../test_helper', __FILE__)
 
 class String
@@ -28,7 +30,7 @@ class HelpersTest < Test::Unit::TestCase
   end
 
   test "inspect_tree (class method)" do
-    expected = <<-t.strip_leading_spaces(6)
+    expected = <<-t
       .
       └── Node id: 1
           ├── Node id: 2
@@ -38,14 +40,14 @@ class HelpersTest < Test::Unit::TestCase
               └── Node id: 6
     t
     roots    = Node.roots(:scope_id => 1)
-    expected = fix_ids(expected, roots.first.id - 1) # ugh
+    expected = fix_ids(expected, roots.first.id - 1).strip_leading_spaces(6) # ugh
     actual = Node.first.inspect_tree
 
     assert_equal expected, actual.strip
   end
 
   test "inspect_tree (scope method)" do
-    expected = <<-t.strip_leading_spaces(6)
+    expected = <<-t
       .
       ├── Node id: 1
       |   ├── Node id: 2
@@ -62,12 +64,12 @@ class HelpersTest < Test::Unit::TestCase
     t
 
     roots    = Node.roots(:scope_id => 1)
-    expected = fix_ids(expected, roots.first.id - 1) # ugh
+    expected = fix_ids(expected, roots.first.id - 1).strip_leading_spaces(6) # ugh
     actual   = roots.inspect_tree([:id])
 
     assert_equal expected, actual.strip
   end
-  
+
   def fix_ids(expected, offset)
     expected = expected.gsub(/(\d+)/) { $1.to_i + offset }
   end

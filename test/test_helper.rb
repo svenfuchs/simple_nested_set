@@ -3,14 +3,19 @@ ENV['RAILS_ENV'] = 'test'
 require 'rubygems'
 require 'test/unit'
 require 'fileutils'
-require 'active_record'
 require 'logger'
-require 'pathname_local'
+require 'active_record'
 require 'test_declarative'
 require 'database_cleaner'
-require 'ruby-debug'
+# require 'ruby-debug'
 
-$:.unshift Pathname.local('../lib').to_s
+# Hmmm ... without activating the gem gem_patching will fail to load the patch
+# under 1.9.2 because Gem.loaded_specs is then empty. not sure what's the right
+# thing to do here. Should probably be fixed in gem_patching but needs to take
+# into account whatever Bundler does here.
+Gem.activate('arel') if RUBY_VERSION >= '1.9'
+
+$:.unshift File.expand_path('../../lib', __FILE__)
 require 'simple_nested_set'
 
 log = '/tmp/simple_nested_set_test.log'
@@ -21,8 +26,7 @@ ActiveRecord::Base.establish_connection(:adapter => 'sqlite3', :database => ':me
 
 DatabaseCleaner.strategy = :truncation
 
-
-load Pathname.local('fixtures.rb')
+load File.expand_path('../fixtures.rb', __FILE__)
 
 class Test::Unit::TestCase
   def teardown
