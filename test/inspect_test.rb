@@ -29,7 +29,7 @@ class HelpersTest < Test::Unit::TestCase
     unrelated_root = Node.create!(:slug => 'unrelated_root', :scope_id => 2)
   end
 
-  test "inspect_tree (class method)" do
+  test "inspect_tree (instance method)" do
     expected = <<-t
       .
       └── Node id: 1
@@ -46,7 +46,7 @@ class HelpersTest < Test::Unit::TestCase
     assert_equal expected, actual.strip
   end
 
-  test "inspect_tree (scope method)" do
+  test "inspect_tree (scope)" do
     expected = <<-t
       .
       ├── Node id: 1

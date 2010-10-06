@@ -1,0 +1,133 @@
+h1. SimpleNestedSet
+
+SimpleNestedSet implements the "nested set pattern":http://en.wikipedia.org/wiki/Nested_set_model for ActiveRecord 3.x.
+
+It aims to be a no-fluff, simple and clean implementation based on and making heavy use of ActiveRecord scopes and Arel, making it as easy as possible to work with nested sets.
+
+h2. Installation
+
+Just add it to your Gemfile:
+
+<pre>
+  gem 'simple_nested_set'
+</pre>
+
+h2. Basics
+
+Compared to other database tree implementation patterns (such as adjacent tree or materialized path) the nested set model is, all in all, most inexpensive and powerful on read operations but quite expensive on write operations. This is because it stores a rich amount of structure information in the lft/rgt columns that needs to be updated when the set/tree structure is changed.
+
+simple_nested_set will, additionally to the basic nested set implementation, denormalize (store) a node's parent_id *and* materialized path for you. It simply does that when the :parent_id and/or :path columns are present.
+
+So simple_nested_set is mainly targeted at working with relatively small sets of nodes that do not need to be updated really frequently. If you do not need denormalization of parent_ids and/or paths you might try to just omit these columns from your schema (we'll also accept patches that add additional options for turning this feature off).
+
+h2. Usage
+
+h3. Setup
+
+simple_nested_set adds an act_macro to ActiveRecord::Base that you can call to make any ActiveRecord model a nested set:
+
+<pre>
+ class Node < ActiveRecord::Base
+    acts_as_nested_set
+  end
+</pre>
+
+The acts_as_nested_set method accepts a :scope option that will scope a nested set to the given column:
+
+<pre>
+  acts_as_nested_set :scope => :site_id
+</pre>
+
+This will make the nested set consider nodes that have the same site_id to belong to the same nested set.
+
+h3. Class methods
+
+Nested set model classes implement a number of class methods that return scopes for looking up nodes of a particluar nested set. E.g.:
+
+<pre>
+  Node.root                   # => the first root node
+  Node.roots                  # => all root nodes
+  Node.roots(:site_id => 1)   # => all root nodes scoped to the given site_id
+  Node.leaves                 # => all leaf nodes
+</pre>
+
+See the API docs for a "full list of instance methods":http://rdoc.info/github/svenfuchs/simple_nested_set/master/SimpleNestedSet/ClassMethods.
+
+h3. Instance methods
+
+Nested set model classes also implement a number of instance methods that make it easy to look up related nodes or check the structure. E.g.
+
+<pre>
+  node = Node.root
+  node.root?        # => true
+  node.children?    # => true
+
+  child = node.children.first
+  child.parent        # => root
+  child.siblings      # => the child's siblings
+  child.nest_sibling  # => the child's next sibling
+</pre>
+
+See the API docs for a "full list of instance methods":http://rdoc.info/github/svenfuchs/simple_nested_set/master/SimpleNestedSet/InstanceMethods.
+
+h3. Updating a nested set's structure
+
+simple_nested_set aims to make it easy to update the structure of a nested set without needing to care about its implementation.
+
+When working with HTML views/forms or Javascript an API it is often quite inconvenient to be forced to a certain nested set API. Instead one wants APIs like accepts_nested_attributes in ActiveRecord to just work.
+
+Therefor simple_nested_set implements a number of alternative ways to update the structure:
+
+h4. Calling instance methods directly
+
+One can, obviously, call move_* methods directly on the node instance:
+
+<pre>
+  node.move_to_root             # makes the node a root node
+  node.move_to_child_of(parent) # makes the node a child of parent
+  node.move_to_left             # moves the node to the left of its left_sibling (if any)
+  node.move_to_right            # moves the node to the right of its right_sibling (if any)
+  node.move_to_left_of(other)   # moves the node to the left of the given node
+  node.move_to_right_of(other)  # moves the node to the right of the given node
+  node.move_to_path('foo/bar')  # moves the node to the given path
+</pre>
+
+h4. Assigning structure-related attributes
+
+One can also change the position of a node by assigning structure attributes. These are: :left_id, :right_id, :parent_id, :path.
+
+<pre>
+  node.upate_attributes(:parent_id => other.id) # makes the node a child of the given parent
+  node.upate_attributes(:left_id => other.id)   # moves the node to the *right* of the given node
+  node.upate_attributes(:right_id => other.id)  # moves the node to the *left* of the given node
+  node.upate_attributes(:path => 'foo/bar')     # moves the node to the given path
+</pre>
+
+h3. nested_set
+
+A nested set ActiveRecord model has a scope object that is accessible through the nested_set method:
+
+<pre>
+  Nodes.root.nested_set
+</pre>
+
+This scope object both serves as the main encapsulation of nested set logic and can be used to perform ActiveRecord lookups on the nested set.
+
+
+h3. Inspecting a nested set
+
+You can call #inspect_tree on both nested_set scopes and node instances to get a visual representation of the tree:
+
+<pre>
+  Node.roots.inspect_tree
+
+  # =>
+  .
+  └── Node id: 1
+      ├── Node id: 2
+      |   ├── Node id: 3
+      |   └── Node id: 4
+      └── Node id: 5
+          └── Node id: 6
+</pre>
+
