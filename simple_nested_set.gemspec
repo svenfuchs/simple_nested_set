@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
   s.add_dependency             'activesupport'
   s.add_dependency             'gem_patching'
 
-  s.add_development_dependency 'database_cleaner'
   s.add_development_dependency 'test_declarative'
+  s.add_development_dependency 'sqlite3-ruby'
+  s.add_development_dependency 'database_cleaner'
 end
