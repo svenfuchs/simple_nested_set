@@ -6,6 +6,10 @@ module SimpleNestedSet
       @_nested_set ||= nested_set_class.new(self)
     end
 
+    def changed?
+      super || @_nested_set_attributes
+    end
+
     def attributes=(attributes, *args)
       @_nested_set_attributes = nested_set_class.extract_attributes!(attributes)
       super(attributes, *args)
