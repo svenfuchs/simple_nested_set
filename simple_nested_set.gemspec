@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.summary      = "a simple to use nested set solution for ActiveRecord 3"
   s.description  = "simple_nested_set allows to easily handle nested sets in ActiveRecord"
 
-  s.files        = `git ls-files {app,lib}`.split("\n")
+  s.files        = Dir.glob("lib/**/**")
   s.platform     = Gem::Platform::RUBY
   s.require_path = 'lib'
   s.rubyforge_project = '[none]'
