@@ -16,14 +16,17 @@ module SimpleNestedSet
       def perform
         if path && node.path_changed?
           node.move_to_path(path)
-        elsif attributes.key?(:left_id) && left_id != node.id
+        elsif attributes.key?(:left_id) && left_id != node.id && (left_id || !parent_id)
           node.move_to_right_of(left_id)
-        elsif attributes.key?(:right_id) && right_id != node.id
+        elsif attributes.key?(:right_id) && right_id != node.id && (right_id || !parent_id)
           node.move_to_left_of(right_id)
-        end
-
-        if attributes.key?(:parent_id) && parent_id != node.parent_id
+        elsif attributes.key?(:parent_id) && parent_id != node.parent_id
           node.move_to_child_of(parent_id)
+          if attributes.key?(:left_id) && left_id != node.id
+            node.move_to_right_of(left_id)
+          elsif attributes.key?(:right_id) && right_id != node.id
+            node.move_to_left_of(right_id)
+          end
         end
       end
 

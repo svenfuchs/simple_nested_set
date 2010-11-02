@@ -383,10 +383,22 @@ class NestedSetTest < Test::Unit::TestCase
     assert_equal child_2, child_2_1.left_sibling
   end
 
+  test "node.update_attributes(:parent_id => parent.id, :left_id => 'null') moves the node to child of the given parent node" do
+    child_1.update_attributes!(:parent_id => child_2.id, :left_id => 'null')
+    assert_equal child_2, child_1.parent
+    assert_nil child_1.left_sibling
+  end
+
   test "node.update_attributes(:parent_id => parent.id, :right_id => right.id) moves the node to right of the given right node" do
     child_2_1.update_attributes!(:parent_id => root.id, :right_id => child_2.id)
     assert_equal root, child_2_1.parent
     assert_equal child_2, child_2_1.right_sibling
+  end
+
+  test "node.update_attributes(:parent_id => parent.id, :right_id => 'null') moves the node to child of the given parent node" do
+    child_1.update_attributes!(:parent_id => child_2.id, :right_id => 'null')
+    assert_equal child_2, child_1.parent
+    assert_nil child_1.right_sibling
   end
 
 
