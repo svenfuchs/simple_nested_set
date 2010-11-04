@@ -155,21 +155,23 @@ module SimpleNestedSet
       move_to_right_of(right_sibling) if right_sibling
     end
 
-    # Move the node to the left of another node
+    # Move the node to the left of another node. If this other node is nil then
+    # this means the node is to be made the rightmost sibling.
     def move_to_left_of(node)
       if node
         nested_set.move_to(node, :left)
-      elsif left_most = siblings.first
-        move_to_right_of(left_most)
+      elsif right_most = siblings.last
+        move_to_right_of(right_most)
       end
     end
 
-    # Move the node to the left of another node
+    # Move the node to the left of another node. If this other node is nil then
+    # this means the node is to be made the leftmost sibling.
     def move_to_right_of(node)
       if node
         nested_set.move_to(node, :right)
-      elsif right_most = siblings.last
-        move_to_left_of(right_most)
+      elsif left_most = siblings.first
+        move_to_left_of(left_most)
       end
     end
 

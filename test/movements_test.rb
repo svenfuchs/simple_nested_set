@@ -58,11 +58,18 @@ class NestedSetTest < Test::Unit::TestCase
   test "node.move_to_left_of(other) moves the node to the left of the given node" do
     child_2_1.move_to_left_of(child_2)
     assert_equal child_2_1, child_2.left_sibling
-    assert_equal root, child_2_1.parent
+    assert_equal root, child_2.parent
 
     child_2_1.move_to_left_of(root)
     assert_equal child_2_1, root.left_sibling
     assert_nil child_2_1.parent
+  end
+
+  test "node.move_to_left_of(nil) moves the node to the right of the rightmost sibling" do
+    child_1.move_to_left_of(nil)
+    assert_equal child_2, child_1.left_sibling
+    assert_nil child_1.right_sibling
+    assert_equal root, child_1.parent
   end
 
   test "node.move_to_right_of(other) moves the node to the right of the given node" do
@@ -73,6 +80,13 @@ class NestedSetTest < Test::Unit::TestCase
     child_2_1.move_to_right_of(root)
     assert_equal child_2_1, root.right_sibling
     assert_nil child_2_1.parent
+  end
+
+  test "node.move_to_right_of(nil) moves the node to the left of the leftmost sibling" do
+    child_2.move_to_right_of(nil)
+    assert_nil child_2.left_sibling
+    assert_equal child_1, child_2.right_sibling
+    assert_equal root, child_2.parent
   end
 
   test "node.update_attributes(:parent_id => parent.id) moves the node to the new parent (as the rightmost node)" do
@@ -97,6 +111,10 @@ class NestedSetTest < Test::Unit::TestCase
     child_2.update_attributes!(:left_id => '')
     assert_equal root, child_2.parent
     assert_equal child_1, child_2.right_sibling
+
+    child_1.reload.update_attributes!(:left_id => '')
+    assert_equal root, child_1.parent
+    assert_equal child_2, child_1.right_sibling
   end
 
   test "node.update_attributes(:left_id => '') does nothing to a node w/o siblings" do
@@ -116,6 +134,10 @@ class NestedSetTest < Test::Unit::TestCase
     child_1.update_attributes!(:right_id => '')
     assert_equal root, child_1.parent
     assert_equal child_2, child_1.left_sibling
+
+    child_2.reload.update_attributes!(:right_id => '')
+    assert_equal root, child_2.parent
+    assert_equal child_1, child_2.left_sibling
   end
 
   test "node.update_attributes(:right_id => '') does nothing to a node w/o siblings" do

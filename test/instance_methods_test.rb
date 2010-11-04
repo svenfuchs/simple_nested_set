@@ -111,9 +111,10 @@ class NestedSetTest < Test::Unit::TestCase
   end
 
   test "node.self_and_siblings returns the node and the node's siblings" do
+    child_1.move_right # so we test the sort order, too
     assert_equal [root], root.self_and_siblings
-    assert_equal [child_1, child_2], child_1.self_and_siblings
-    assert_equal [child_1, child_2], child_2.self_and_siblings
+    assert_equal [child_2, child_1], child_1.self_and_siblings
+    assert_equal [child_2, child_1], child_2.self_and_siblings
     assert_equal [child_2_1], child_2_1.self_and_siblings
   end
 
@@ -147,7 +148,8 @@ class NestedSetTest < Test::Unit::TestCase
   end
 
   test "node.children returns the node's children" do
-    assert_equal [child_1, child_2], root.children
+    child_1.move_right # so we test the sort order, too
+    assert_equal [child_2, child_1], root.children
     assert_equal [], child_1.children
     assert_equal [child_2_1], child_2.children
     assert_equal [], child_2_1.children

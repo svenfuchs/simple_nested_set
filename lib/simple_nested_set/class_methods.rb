@@ -26,7 +26,7 @@ module SimpleNestedSet
     end
 
     def without_node(id)
-      where(arel_table[:id].not_eq(id))
+      where(arel_table[:id].not_eq(id)).order(:lft)
     end
 
     def without_parent
@@ -34,27 +34,27 @@ module SimpleNestedSet
     end
 
     def with_parent(parent_id)
-      where(:parent_id => parent_id)
+      where(:parent_id => parent_id).order(:lft)
     end
 
     def with_ancestors(lft, rgt)
-      where(arel_table[:lft].lt(lft).and(arel_table[:rgt].gt(rgt)))
+      where(arel_table[:lft].lt(lft).and(arel_table[:rgt].gt(rgt))).order(:lft)
     end
 
     def with_descendants(lft, rgt)
-      where(arel_table[:lft].gt(lft).and(arel_table[:rgt].lt(rgt)))
+      where(arel_table[:lft].gt(lft).and(arel_table[:rgt].lt(rgt))).order(:lft)
     end
 
     def with_left_sibling(lft)
-      where(:rgt => lft - 1)
+      where(:rgt => lft - 1).order(:lft)
     end
 
     def with_right_sibling(rgt)
-      where(:lft => rgt + 1)
+      where(:lft => rgt + 1).order(:lft)
     end
 
     def with_leaves
-      where("#{arel_table[:lft].to_sql} = #{arel_table[:rgt].to_sql} - 1")
+      where("#{arel_table[:lft].to_sql} = #{arel_table[:rgt].to_sql} - 1").order(:lft)
     end
   end
 end

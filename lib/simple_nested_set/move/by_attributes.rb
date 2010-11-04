@@ -16,12 +16,6 @@ module SimpleNestedSet
       def perform
         move_by_parent_id if move_by_parent_id?
 
-        # if left_id is given but blank, set right_id to leftmost sibling
-        attributes[:right_id] = siblings.first.id if blank_given?(:left_id) && siblings.any?
-
-        # if right_id is given but blank, set left_id to rightmost sibling
-        attributes[:left_id]  = siblings.last.id if blank_given?(:right_id) && siblings.any?
-
         if path && node.path_changed?
           node.move_to_path(path)
         elsif move_by_left_id?

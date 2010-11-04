@@ -34,7 +34,8 @@ module SimpleNestedSet
     def initialize(*args)
       super(node_class, node_class.arel_table)
       @node = args.first if args.size == 1
-      @where_values = self.class.scope(node).instance_variable_get(:@where_values) if node
+      @where_values = self.class.scope(args.first).instance_variable_get(:@where_values) if args.size == 1
+      # TODO how to set order(:lft) here? it's now being added on various scopes (see class methods), would be better to have it here.
     end
 
     def save!
