@@ -14,23 +14,48 @@ module SimpleNestedSet
       end
 
       def perform
+        move_by_parent_id if move_by_parent_id?
+
+        # if left_id is given but blank, set right_id to leftmost sibling
+        attributes[:right_id] = siblings.first.id if blank_given?(:left_id) && siblings.any?
+
+        # if right_id is given but blank, set left_id to rightmost sibling
+        attributes[:left_id]  = siblings.last.id if blank_given?(:right_id) && siblings.any?
+
         if path && node.path_changed?
           node.move_to_path(path)
-        elsif attributes.key?(:left_id) && left_id != node.id && (left_id || !parent_id)
-          node.move_to_right_of(left_id)
-        elsif attributes.key?(:right_id) && right_id != node.id && (right_id || !parent_id)
-          node.move_to_left_of(right_id)
-        elsif attributes.key?(:parent_id) && parent_id != node.parent_id
-          node.move_to_child_of(parent_id)
-          if attributes.key?(:left_id) && left_id != node.id
-            node.move_to_right_of(left_id)
-          elsif attributes.key?(:right_id) && right_id != node.id
-            node.move_to_left_of(right_id)
-          end
+        elsif move_by_left_id?
+          move_by_left_id
+        elsif move_by_right_id?
+          move_by_right_id
         end
       end
 
       protected
+
+        def move_by_left_id?
+          attributes.key?(:left_id) && left_id != node.id
+        end
+
+        def move_by_right_id?
+          attributes.key?(:right_id) && right_id != node.id
+        end
+
+        def move_by_parent_id?
+          attributes.key?(:parent_id) && parent_id != node.parent_id
+        end
+
+        def move_by_left_id
+          node.move_to_right_of(left_id)
+        end
+
+        def move_by_right_id
+          node.move_to_left_of(right_id)
+        end
+
+        def move_by_parent_id
+          node.move_to_child_of(parent_id)
+        end
 
         def parent_id
           attributes[:parent_id].blank? ? nil : attributes[:parent_id].to_i
@@ -56,11 +81,6 @@ module SimpleNestedSet
             attributes[:"#{key}_id"] = attributes.delete(key).id if attributes.key?(key)
           end
 
-          # if left_id is given but blank, set right_id to leftmost sibling
-          attributes[:right_id] = siblings.first.id if blank_given?(:left_id) && siblings.any?
-
-          # if right_id is given but blank, set left_id to rightmost sibling
-          attributes[:left_id]  = siblings.last.id if blank_given?(:right_id) && siblings.any?
         end
 
         def blank_given?(key)
