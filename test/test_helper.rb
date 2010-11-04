@@ -9,7 +9,7 @@ require 'bundler/setup'
 require 'active_record'
 require 'test_declarative'
 require 'database_cleaner'
-# require 'ruby-debug'
+require 'ruby-debug'
 
 # Hmmm ... without activating the gem gem_patching will fail to load the patch
 # under 1.9.2 because Gem.loaded_specs is then empty. not sure what's the right

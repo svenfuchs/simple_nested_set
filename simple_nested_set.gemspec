@@ -22,4 +22,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'test_declarative'
   s.add_development_dependency 'sqlite3-ruby'
   s.add_development_dependency 'database_cleaner'
+  s.add_development_dependency 'ruby-debug'
 end
