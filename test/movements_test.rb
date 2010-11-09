@@ -182,4 +182,12 @@ class NestedSetTest < Test::Unit::TestCase
     assert_nil child_1.parent
     assert_equal root, child_1.left_sibling
   end
+
+  # REGRESSION TEST CASES
+
+  test "nil values for parent are handled properly" do
+    assert_nothing_raised do
+      Node.create!(:slug => 'nil_value', :parent => nil)
+    end
+  end
 end

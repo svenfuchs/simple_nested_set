@@ -72,7 +72,7 @@ module SimpleNestedSet
           attributes.each { |key, value| attributes[key] = nil if value == 'null' }
 
           [:parent, :left, :right].each do |key|
-            attributes[:"#{key}_id"] = attributes.delete(key).id if attributes.key?(key)
+            attributes[:"#{key}_id"] = attributes.delete(key).id if attributes[key]
           end
 
         end
