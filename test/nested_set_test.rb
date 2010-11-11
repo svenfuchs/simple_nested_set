@@ -98,6 +98,7 @@ class NestedSetTest < Test::Unit::TestCase
 
   test "concating a string aggregate abstracted for mysql" do
     assert_equal "GROUP_CONCAT(`slug`, '/')", group_concat(:mysql, 'slug')
+    assert_equal "GROUP_CONCAT(`slug`, '/')", group_concat(:mysql2, 'slug')
   end
 
   test "concating a string aggregate abstracted for postgres" do
