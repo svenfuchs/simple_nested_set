@@ -6,7 +6,7 @@ module SimpleNestedSet
       case database.to_sym
       when :sqlite, :sqlite3
         "GROUP_CONCAT(#{field}, '#{separator}')"
-      when :mysql
+      when :mysql, :mysql2
         "GROUP_CONCAT(`#{field}`, '#{separator}')"
       when :postgresql
         "array_to_string(array_agg(\"#{field}\"), '#{separator}')"
