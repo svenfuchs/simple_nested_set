@@ -122,21 +122,43 @@ module SimpleNestedSet
     end
 
     def denormalize_level_query
-      query = arel_table.as(:l)
-      query = query.project('count(id)').
-              where(query[:lft].lt(arel_table[:lft])).
-              where(query[:rgt].gt(arel_table[:rgt])).
-              where(where_clauses.map { |clause| clause.gsub(table_name, 'l') })
-      "level = (#{query.to_sql})"
+      # query = arel_table.as(:l)
+      # query = query.project('count(id)').
+      #         where(query[:lft].lt(arel_table[:lft])).
+      #         where(query[:rgt].gt(arel_table[:rgt])).
+      #         where(where_clauses.map { |clause| clause.gsub(table_name, 'l') })
+      # "level = (#{query.to_sql})"
+
+      %(
+        level = (
+          SELECT COUNT("l"."id")
+          FROM #{table_name} AS l
+          WHERE
+            l.lft < #{table_name}.lft AND
+            l.rgt > #{table_name}.rgt AND
+            #{where_clauses.map { |clause| clause.gsub(table_name, 'l') }.join(' AND ')}
+        )
+      )
     end
 
     def denormalize_path_query
-      query = arel_table.as(:l)
-      query = query.project(group_concat(db_adapter, :slug)).
-              where(query[:lft].lteq(arel_table[:lft])).
-              where(query[:rgt].gteq(arel_table[:rgt])).
-              where(where_clauses.map { |clause| clause.gsub(table_name, 'l') })
-      "path = (#{query.to_sql})"
+      # query = arel_table.as(:l)
+      # query = query.project(group_concat(db_adapter, :slug)).
+      #         where(query[:lft].lteq(arel_table[:lft])).
+      #         where(query[:rgt].gteq(arel_table[:rgt])).
+      #         where(where_clauses.map { |clause| clause.gsub(table_name, 'l') })
+      # "path = (#{query.to_sql})"
+
+      %(
+        path = (
+          SELECT #{group_concat(db_adapter, :slug)}
+          FROM #{table_name} AS l
+          WHERE
+            l.lft <= #{table_name}.lft AND
+            l.rgt >= #{table_name}.rgt AND
+            #{where_clauses.map { |clause| clause.gsub(table_name, 'l') }.join(' AND ')}
+        )
+      )
     end
 
     def db_adapter

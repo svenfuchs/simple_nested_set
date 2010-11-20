@@ -54,7 +54,8 @@ module SimpleNestedSet
     end
 
     def with_leaves
-      where("#{arel_table[:lft].to_sql} = #{arel_table[:rgt].to_sql} - 1").order(:lft)
+      # where("#{arel_table[:lft].to_sql} = #{arel_table[:rgt].to_sql} - 1").order(:lft)
+      where("#{arel_table.name}.lft = #{arel_table.name}.rgt - 1").order(:lft)
     end
   end
 end
