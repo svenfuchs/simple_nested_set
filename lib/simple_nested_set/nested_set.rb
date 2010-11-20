@@ -129,14 +129,17 @@ module SimpleNestedSet
       #         where(where_clauses.map { |clause| clause.gsub(table_name, 'l') })
       # "level = (#{query.to_sql})"
 
+      scope = where_clauses.map { |clause| clause.gsub(table_name, 'l') }.join(' AND ')
+      scope = "AND #{scope}" unless scope.empty?
+
       %(
         level = (
           SELECT COUNT("l"."id")
           FROM #{table_name} AS l
           WHERE
             l.lft < #{table_name}.lft AND
-            l.rgt > #{table_name}.rgt AND
-            #{where_clauses.map { |clause| clause.gsub(table_name, 'l') }.join(' AND ')}
+            l.rgt > #{table_name}.rgt
+            #{scope}
         )
       )
     end
@@ -149,14 +152,17 @@ module SimpleNestedSet
       #         where(where_clauses.map { |clause| clause.gsub(table_name, 'l') })
       # "path = (#{query.to_sql})"
 
+      scope = where_clauses.map { |clause| clause.gsub(table_name, 'l') }.join(' AND ')
+      scope = "AND #{scope}" unless scope.empty?
+
       %(
         path = (
           SELECT #{group_concat(db_adapter, :slug)}
           FROM #{table_name} AS l
           WHERE
             l.lft <= #{table_name}.lft AND
-            l.rgt >= #{table_name}.rgt AND
-            #{where_clauses.map { |clause| clause.gsub(table_name, 'l') }.join(' AND ')}
+            l.rgt >= #{table_name}.rgt
+            #{scope}
         )
       )
     end
