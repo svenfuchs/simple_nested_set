@@ -122,49 +122,21 @@ module SimpleNestedSet
     end
 
     def denormalize_level_query
-      # query = arel_table.as(:l)
-      # query = query.project('count(id)').
-      #         where(query[:lft].lt(arel_table[:lft])).
-      #         where(query[:rgt].gt(arel_table[:rgt])).
-      #         where(where_clauses.map { |clause| clause.gsub(table_name, 'l') })
-      # "level = (#{query.to_sql})"
-
-      scope = where_clauses.map { |clause| clause.gsub(table_name, 'l') }.join(' AND ')
-      scope = "AND #{scope}" unless scope.empty?
-
-      %(
-        level = (
-          SELECT COUNT("l"."id")
-          FROM #{table_name} AS l
-          WHERE
-            l.lft < #{table_name}.lft AND
-            l.rgt > #{table_name}.rgt
-            #{scope}
-        )
-      )
+      aliaz = arel_table.as(:l)
+      query = aliaz.project(aliaz[:id].count).
+                    where(aliaz[:lft].lt(arel_table[:lft])).
+                    where(aliaz[:rgt].gt(arel_table[:rgt]))
+      query = [query.to_sql] + where_clauses.map { |clause| clause.gsub(arel_table.name, 'l') }
+      "level = (#{query.join(' AND ')})"
     end
 
     def denormalize_path_query
-      # query = arel_table.as(:l)
-      # query = query.project(group_concat(db_adapter, :slug)).
-      #         where(query[:lft].lteq(arel_table[:lft])).
-      #         where(query[:rgt].gteq(arel_table[:rgt])).
-      #         where(where_clauses.map { |clause| clause.gsub(table_name, 'l') })
-      # "path = (#{query.to_sql})"
-
-      scope = where_clauses.map { |clause| clause.gsub(table_name, 'l') }.join(' AND ')
-      scope = "AND #{scope}" unless scope.empty?
-
-      %(
-        path = (
-          SELECT #{group_concat(db_adapter, :slug)}
-          FROM #{table_name} AS l
-          WHERE
-            l.lft <= #{table_name}.lft AND
-            l.rgt >= #{table_name}.rgt
-            #{scope}
-        )
-      )
+      aliaz = arel_table.as(:l)
+      query = aliaz.project(group_concat(db_adapter, :slug)).
+                    where(aliaz[:lft].lteq(arel_table[:lft])).
+                    where(aliaz[:rgt].gteq(arel_table[:rgt]))
+      query = [query.to_sql] + where_clauses.map { |clause| clause.gsub(arel_table.name, 'l') }
+      "path = (#{query.join(' AND ')})"
     end
 
     def db_adapter
