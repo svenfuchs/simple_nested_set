@@ -63,13 +63,13 @@ module SimpleNestedSet
     end
 
     # Returns an array of all parents
-    def ancestors
-      nested_set.with_ancestors(lft, rgt)
+    def ancestors(opts = {})
+      nested_set.with_ancestors(lft, rgt, opts)
     end
 
     # Returns the array of all parents and self
     def self_and_ancestors
-      ancestors + [self]
+      ancestors(:include_self => true)
     end
 
     # Returns true if this is a descendent of the given node
@@ -83,13 +83,13 @@ module SimpleNestedSet
     end
 
     # Returns a set of all of its children and nested children.
-    def descendants
-      rgt - lft == 1 ? []  : nested_set.with_descendants(lft, rgt)
+    def descendants(opts = {})
+      nested_set.with_descendants(lft, rgt, opts)
     end
 
     # Returns a set of itself and all of its nested children.
     def self_and_descendants
-      [self] + descendants
+      descendants(:include_self => true)
     end
 
     # Returns the number of descendants
