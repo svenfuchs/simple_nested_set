@@ -37,12 +37,20 @@ module SimpleNestedSet
       where(:parent_id => parent_id).order(:lft)
     end
 
-    def with_ancestors(lft, rgt)
-      where(arel_table[:lft].lt(lft).and(arel_table[:rgt].gt(rgt))).order(:lft)
+    def with_ancestors(lft, rgt, opts = {})
+      if opts.fetch(:include_self, false)
+        where(arel_table[:lft].lteq(lft).and(arel_table[:rgt].gteq(rgt))).order(:lft)
+      else
+        where(arel_table[:lft].lt(lft).and(arel_table[:rgt].gt(rgt))).order(:lft)
+      end
     end
 
-    def with_descendants(lft, rgt)
-      where(arel_table[:lft].gt(lft).and(arel_table[:rgt].lt(rgt))).order(:lft)
+    def with_descendants(lft, rgt, opts = {})
+      if opts.fetch(:include_self, false)
+        where(arel_table[:lft].gteq(lft).and(arel_table[:rgt].lteq(rgt))).order(:lft)
+      else
+        where(arel_table[:lft].gt(lft).and(arel_table[:rgt].lt(rgt))).order(:lft)
+      end
     end
 
     def with_left_sibling(lft)
