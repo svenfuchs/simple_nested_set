@@ -5,6 +5,7 @@ require 'test/unit'
 require 'fileutils'
 require 'logger'
 require 'bundler/setup'
+require 'erb'
 
 require 'active_record'
 require 'test_declarative'
