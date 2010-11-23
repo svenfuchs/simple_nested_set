@@ -118,6 +118,12 @@ class NestedSetTest < Test::Unit::TestCase
     assert_equal [child_2_1], child_2_1.self_and_siblings
   end
 
+  test "node.self_and_children returns node and the node's children" do
+    assert_equal [root, child_1, child_2], root.self_and_children
+    assert_equal [child_1], child_1.self_and_children
+    assert_equal [child_2, child_2_1], child_2.self_and_children
+  end
+
   test "node.leaves returns all of this node's descendants that are leaves" do
     assert_equal [child_1, child_2_1], root.leaves
     assert_equal [], child_1.leaves
@@ -129,8 +135,16 @@ class NestedSetTest < Test::Unit::TestCase
     assert_equal [child_1, child_2, child_2_1], root.descendants
   end
 
+  test "node.descendants returns empty list for a leaf node" do
+    assert_equal [], child_2_1.descendants
+  end
+
   test "node.self_and_descendants returns the node and the node's descendants" do
     assert_equal [root, child_1, child_2, child_2_1], root.self_and_descendants
+  end
+
+  test "node.self_and_descendants returns only self for leaf nodes" do
+    assert_equal [child_1], child_1.self_and_descendants
   end
 
   test "node.descendants_count returns the node's number of children" do
