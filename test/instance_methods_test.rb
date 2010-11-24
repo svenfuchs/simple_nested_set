@@ -103,6 +103,11 @@ class NestedSetTest < Test::Unit::TestCase
     assert_equal [root, child_2, child_2_1], child_2_1.self_and_ancestors
   end
 
+  test "node.self_and_ancestors should return a relation" do
+    assert child_2_1.self_and_ancestors.is_a?(ActiveRecord::Relation)
+    assert root.self_and_ancestors.is_a?(ActiveRecord::Relation)
+  end
+
   test "node.siblings returns the node's siblings" do
     assert_equal [], root.siblings
     assert_equal [child_2], child_1.siblings
@@ -145,6 +150,11 @@ class NestedSetTest < Test::Unit::TestCase
 
   test "node.self_and_descendants returns only self for leaf nodes" do
     assert_equal [child_1], child_1.self_and_descendants
+  end
+
+  test "node.self_and_descendants should return a relation" do
+    assert root.self_and_descendants.is_a?(ActiveRecord::Relation)
+    assert child_1.self_and_descendants.is_a?(ActiveRecord::Relation)
   end
 
   test "node.descendants_count returns the node's number of children" do
