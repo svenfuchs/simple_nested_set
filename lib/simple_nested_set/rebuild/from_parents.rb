@@ -7,8 +7,9 @@ module SimpleNestedSet
         @num ||= 0
       end
 
-      def run(nested_set)
-        nodes = nested_set.order(:parent_id).to_a
+      def run(nested_set, sort_order = nil)
+        order_columns = [:parent_id] + Array[sort_order]
+        nodes = nested_set.order(order_columns.compact).to_a
         renumber(nodes.dup)
         nodes.each(&:save)
       end

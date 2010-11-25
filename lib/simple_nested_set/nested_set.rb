@@ -121,8 +121,8 @@ module SimpleNestedSet
       Rebuild::FromPaths.new.run(self)
     end
 
-    def rebuild_from_parents!
-      Rebuild::FromParents.new.run(self)
+    def rebuild_from_parents!(sort_order = nil)
+      Rebuild::FromParents.new.run(self, sort_order)
     end
 
     def denormalize_level_query
