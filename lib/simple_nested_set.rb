@@ -21,6 +21,7 @@ module SimpleNestedSet
 
   module Rebuild
     autoload :FromPaths,     'simple_nested_set/rebuild/from_paths'
+    autoload :FromParents,   'simple_nested_set/rebuild/from_parents'
   end
 end
 

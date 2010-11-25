@@ -63,10 +63,28 @@ class NestedSetTest < Test::Unit::TestCase
   test "rebuild_from_path" do
     child_2_2 = Node.create!(:slug => 'child_2_2', :scope_id => 1, :parent_id => child_2.id)
     child_3   = Node.create!(:slug => 'child_3',   :scope_id => 1, :parent_id => root.id)
-    root_2    = Node.create!(:slug => 'root_2',   :scope_id => 1)
+    root_2    = Node.create!(:slug => 'root_2',    :scope_id => 1)
 
     Node.update_all(:lft => 0, :rgt => 0)
     root.nested_set.rebuild_from_paths!
+    [root, child_1, child_2, child_2_1, child_2_2, child_3, root_2].map(&:reload)
+
+    assert_equal [1,  12], [root.lft, root.rgt]
+    assert_equal [2,  3 ], [child_1.lft, child_1.rgt]
+    assert_equal [4,  9 ], [child_2.lft, child_2.rgt]
+    assert_equal [5,  6 ], [child_2_1.lft, child_2_1.rgt]
+    assert_equal [7,  8 ], [child_2_2.lft, child_2_2.rgt]
+    assert_equal [10, 11], [child_3.lft, child_3.rgt]
+    assert_equal [13, 14], [root_2.lft, root_2.rgt]
+  end
+
+  test "rebuild_from_parents" do
+    child_2_2 = Node.create!(:slug => 'child_2_2', :scope_id => 1, :parent_id => child_2.id)
+    child_3   = Node.create!(:slug => 'child_3',   :scope_id => 1, :parent_id => root.id)
+    root_2    = Node.create!(:slug => 'root_2',    :scope_id => 1)
+
+    Node.update_all(:lft => 0, :rgt => 0)
+    root.nested_set.rebuild_from_parents!
     [root, child_1, child_2, child_2_1, child_2_2, child_3, root_2].map(&:reload)
 
     assert_equal [1,  12], [root.lft, root.rgt]

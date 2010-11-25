@@ -121,6 +121,10 @@ module SimpleNestedSet
       Rebuild::FromPaths.new.run(self)
     end
 
+    def rebuild_from_parents!
+      Rebuild::FromParents.new.run(self)
+    end
+
     def denormalize_level_query
       aliaz = arel_table.as(:l)
       query = aliaz.project(aliaz[:id].count).
