@@ -2,12 +2,13 @@ module SimpleNestedSet
   class NestedSet < ActiveRecord::Relation
     include SqlAbstraction
 
-    class_inheritable_accessor :node_class, :scope_names
+    class_inheritable_accessor :node_class, :scope_names, :move_after_save
 
     class << self
       def build_class(model, scopes)
         model.const_get(:NestedSet) rescue model.const_set(:NestedSet, Class.new(NestedSet)).tap do |node_class|
           node_class.node_class = model
+          node_class.move_after_save = true
           node_class.scope_names = Array(scopes).map { |s| s.to_s =~ /_id$/ ? s.to_sym : :"#{s}_id" }
         end
       end
@@ -41,8 +42,15 @@ module SimpleNestedSet
     def save!
       attributes = node.instance_variable_get(:@_nested_set_attributes)
       node.instance_variable_set(:@_nested_set_attributes, nil)
-      move_by_attributes(attributes) unless attributes.blank?
-      denormalize!
+
+      if self.class.move_after_save
+        move_by_attributes(attributes) unless attributes.blank?
+        denormalize!
+      elsif attributes
+        attributes.each do |key, value|
+          node.update_attribute(key, value)
+        end
+      end
     end
 
     # FIXME we don't always want to call this on after_save, do we? it's only relevant when

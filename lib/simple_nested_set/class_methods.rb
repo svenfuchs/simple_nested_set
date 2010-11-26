@@ -65,5 +65,18 @@ module SimpleNestedSet
       # where("#{arel_table[:lft].to_sql} = #{arel_table[:rgt].to_sql} - 1").order(:lft)
       where("#{arel_table.name}.lft = #{arel_table.name}.rgt - 1").order(:lft)
     end
+
+    def nested_set_transaction
+      begin
+        nested_set_class.move_after_save = false
+        self.transaction do
+          yield self
+          # nested_set_class.new(self).rebuild_by_parents!
+          Rebuild::FromParents.new.run(self, :slug)
+        end
+      ensure
+        nested_set_class.move_after_save = true
+      end
+    end
   end
 end

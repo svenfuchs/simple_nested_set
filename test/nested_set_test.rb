@@ -114,6 +114,34 @@ class NestedSetTest < Test::Unit::TestCase
     assert_equal [13, 14], [root_2.lft, root_2.rgt]
   end
 
+  test "save several nodes in a transaction and rebuild_from_parents at the end" do
+    # some hacks to make AR and Ruby behave like i want it
+    Node.destroy(unrelated_root.id)
+    unrelated_root = nil
+    child_2_2 = child_3 = root_2 = 'node_placeholder'
+
+    Node.nested_set_transaction do |klass|
+      child_2_2 = klass.create!(:slug => 'child_2_2', :scope_id => 1, :parent_id => child_2.id)
+      child_3   = klass.create!(:slug => 'child_3',   :scope_id => 1, :parent_id => root.id)
+      root_2    = klass.create!(:slug => 'root_2',    :scope_id => 1)
+
+      # there should only be an insertion, no movement
+      assert_not_equal 7,      child_2_2.lft, '7 would be the left value of a moved node'
+      assert_equal child_2.id, child_2_2.parent_id, "PARENT: #{child_2.inspect}, CHILD: #{child_2_2.inspect}"
+    end
+
+
+    [root, child_1, child_2, child_2_1, child_2_2, child_3, root_2].map(&:reload)
+
+    assert_equal [1,  12], [root.lft, root.rgt]
+    assert_equal [2,  3 ], [child_1.lft, child_1.rgt]
+    assert_equal [4,  9 ], [child_2.lft, child_2.rgt]
+    assert_equal [5,  6 ], [child_2_1.lft, child_2_1.rgt]
+    assert_equal [7,  8 ], [child_2_2.lft, child_2_2.rgt]
+    assert_equal [10, 11], [child_3.lft, child_3.rgt]
+    assert_equal [13, 14], [root_2.lft, root_2.rgt]
+  end
+
   # SQL ABSTRACTION
 
   test "can call included group_concat" do
