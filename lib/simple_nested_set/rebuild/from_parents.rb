@@ -31,7 +31,7 @@ module SimpleNestedSet
       end
 
       def child?(node, child)
-        if root_node?(child)
+        if child.root?
           false
         elsif direct_child?(node, child)
           true
@@ -40,10 +40,6 @@ module SimpleNestedSet
           # i.e. the child is one of the grandchildren of the node
           child?(node, child.parent)
         end
-      end
-
-      def root_node? node
-        node.nil? || node.parent_id.nil?
       end
 
       def direct_child? node, child
