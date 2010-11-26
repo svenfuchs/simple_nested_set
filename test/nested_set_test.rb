@@ -118,7 +118,7 @@ class NestedSetTest < Test::Unit::TestCase
 
   test "can call included group_concat" do
     assert_nothing_raised ArgumentError do
-      [:sqlite, :sqlite3, :mysql, :postgresql].each do |db|
+      [:sqlite, :sqlite3, :mysql, :mysql2, :postgresql].each do |db|
         group_concat(db, 'slug')
       end
     end
