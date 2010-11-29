@@ -9,7 +9,7 @@ module SimpleNestedSet
 
       def run(nested_set, sort_order = nil)
         order_columns = [:parent_id] + Array[sort_order]
-        nodes = nested_set.order(order_columns.compact).to_a
+        nodes = nested_set.except(:order).order(order_columns.compact).to_a
         renumber(nodes.dup)
         nodes.each(&:save)
       end

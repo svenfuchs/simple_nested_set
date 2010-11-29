@@ -66,13 +66,13 @@ module SimpleNestedSet
       where("#{arel_table.name}.lft = #{arel_table.name}.rgt - 1").order(:lft)
     end
 
-    def nested_set_transaction
+    def nested_set_transaction(sort_order = :id)
       begin
         nested_set_class.move_after_save = false
         self.transaction do
           yield self
           # nested_set_class.new(self).rebuild_by_parents!
-          Rebuild::FromParents.new.run(self, :slug)
+          Rebuild::FromParents.new.run(self, sort_order)
         end
       ensure
         nested_set_class.move_after_save = true
