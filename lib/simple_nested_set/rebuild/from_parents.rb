@@ -8,8 +8,14 @@ module SimpleNestedSet
       end
 
       def run(nested_set, sort_order = nil)
-        order_columns = [:parent_id] + Array[sort_order]
-        nodes = nested_set.except(:order).order(order_columns.compact).to_a
+        order_columns = ([:parent_id] + Array[sort_order]).compact
+
+        nodes = if nested_set.respond_to?(:except)
+                  nested_set.except(:order).order(order_columns)
+                else
+                  nested_set.reorder(order_columns)
+                end.to_a
+
         renumber(nodes.dup)
         nodes.each(&:save)
       end
