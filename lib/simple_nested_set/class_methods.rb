@@ -71,7 +71,7 @@ module SimpleNestedSet
         nested_set_class.move_after_save = false
         self.transaction do
           yield self
-          # nested_set_class.new(self).rebuild_by_parents!
+          # nested_set_class.new(self).rebuild_by_parents!(sort_order)
           Rebuild::FromParents.new.run(self, sort_order)
         end
       ensure
