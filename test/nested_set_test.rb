@@ -96,6 +96,32 @@ class NestedSetTest < Test::Unit::TestCase
     assert_equal [13, 14], [root_2.lft, root_2.rgt]
   end
 
+  test "rebuild_from_parents denormalizes level" do
+    child_2_2 = Node.create!(:slug => 'child_2_2', :scope_id => 1, :parent_id => child_2.id)
+    child_3   = Node.create!(:slug => 'child_3',   :scope_id => 1, :parent_id => root.id)
+    root_2    = Node.create!(:slug => 'root_2',    :scope_id => 1)
+
+    Node.update_all(:lft => 0, :rgt => 0, :level => 0)
+    [root, child_1, child_2, child_2_1, child_2_2, child_3, root_2].each do |node|
+      node.reload
+      assert_equal 0, node.level
+    end
+
+    root.nested_set.rebuild_from_parents!
+    [root, child_1, child_2, child_2_1, child_2_2, child_3, root_2].map(&:reload)
+
+    [root, root_2].each do |node|
+      assert_equal 0, node.level
+    end
+
+    [child_1, child_2, child_3].each do |node|
+      assert_equal 1, node.level
+    end
+    [child_2_1, child_2_2].each do |node|
+      assert_equal 2, node.level
+    end
+  end
+
   test "rebuild_from_parents with sort_order" do
     child_2_0 = Node.create!(:slug => 'child_2_0', :scope_id => 1, :parent_id => child_2.id)
     child_3   = Node.create!(:slug => 'child_3',   :scope_id => 1, :parent_id => root.id)
