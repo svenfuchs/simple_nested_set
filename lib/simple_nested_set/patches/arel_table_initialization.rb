@@ -1,6 +1,7 @@
 require 'gem_patching'
 
-if Arel::VERSION == '1.0.1'
+case Arel::VERSION
+when '1.0.1'
   Gem.patching('arel', '1.0.1') do
     # Arel 1.0.0.rc1 Arel::Table#initialize and #table_exists? does not support
     # instantiating an Arel::Table before the database table has been created.
@@ -66,7 +67,7 @@ if Arel::VERSION == '1.0.1'
       end
     end
   end
-else
+when '2.0.4'
   Gem.patching('arel', '2.0.4') do
     Arel::Table.class_eval do
       attr_reader :options
