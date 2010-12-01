@@ -70,7 +70,7 @@ when '1.0.1'
 when '2.0.4'
   Gem.patching('arel', '2.0.4') do
     Arel::Table.class_eval do
-      attr_reader :options
+      attr_reader :options # this line is added
 
       def initialize name, engine = Arel::Table.engine
         @name    = name.to_s
@@ -81,7 +81,7 @@ when '2.0.4'
         @primary_key = nil
 
         if Hash === engine
-          @options = engine
+          @options = engine # this line is added
           @engine  = engine[:engine] || Arel::Table.engine
           @columns = attributes_for engine[:columns]
 
@@ -92,6 +92,7 @@ when '2.0.4'
         end
       end
 
+      # this whole method is added
       def as(table_alias)
         @options ||= {}
         Arel::Table.new(name, options.merge(:as => table_alias))
