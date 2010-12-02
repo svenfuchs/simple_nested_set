@@ -67,43 +67,8 @@ when '1.0.1'
       end
     end
   end
-when '2.0.4'
-  Gem.patching('arel', '2.0.4') do
-    Arel::Table.class_eval do
-      attr_reader :options # this line is added
-
-      def initialize name, engine = Arel::Table.engine
-        @name    = name.to_s
-        @engine  = engine
-        @columns = nil
-        @aliases = []
-        @table_alias = nil
-        @primary_key = nil
-
-        if Hash === engine
-          @options = engine # this line is added
-          @engine  = engine[:engine] || Arel::Table.engine
-          @columns = attributes_for engine[:columns]
-
-          # Sometime AR sends an :as parameter to table, to let the table know
-          # that it is an Alias.  We may want to override new, and return a
-          # TableAlias node?
-          @table_alias = engine[:as] unless engine[:as].to_s == @name
-        end
-      end
-
-      # this whole method is added
-      def as(table_alias)
-        @options ||= {}
-        Arel::Table.new(name, options.merge(:as => table_alias))
-      end
-    end
-  end
-else # include the latest patch here, if any
-  # this patch is equivalent to the 2.0.4 one, it is only listed here, because
-  # it is the latest version. The when-statements should be merge, once a new
-  # version comes
-  Gem.patching('arel', '2.0.5') do
+when '2.0.6'
+  Gem.patching('arel', '2.0.6') do
     Arel::Table.class_eval do
       attr_reader :options # this line is added
 
