@@ -212,6 +212,7 @@ class NestedSetTest < Test::Unit::TestCase
 
   test "concating a string aggregate abstracted for sqlite" do
     assert_equal "GROUP_CONCAT(slug, '/')", group_concat(:sqlite, 'slug')
+    assert_equal "GROUP_CONCAT(slug, '/')", group_concat(:sqlite3, 'slug')
   end
 
   test "concating a string aggregate abstracted for sqlite w/ a custom separator" do
