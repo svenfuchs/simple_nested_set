@@ -1,10 +1,10 @@
 module SimpleNestedSet
   module Rebuild
     class FromParents
-      attr_writer :num
+      attr_accessor :num
 
-      def num
-        @num ||= 0
+      def initialize
+        @num = 0
       end
 
       def run(nested_set, sort_order = nil)
