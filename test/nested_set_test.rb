@@ -226,4 +226,26 @@ class NestedSetTest < Test::Unit::TestCase
   test "concating a string aggregate abstracted for postgres" do
     assert_equal "array_to_string(array_agg(\"slug\"), '/')", group_concat(:postgresql, 'slug')
   end
+
+  test "can call included order_by" do
+    assert_nothing_raised ArgumentError do
+      [:sqlite, :sqlite3, :mysql, :mysql2, :postgresql].each do |db|
+        order_by(db, 'parent_id')
+      end
+    end
+  end
+
+  test "sort order abstracted for sqlite" do
+    assert_equal "parent_id", order_by(:sqlite, 'parent_id')
+    assert_equal "parent_id", order_by(:sqlite3, 'parent_id')
+  end
+
+  test "sort order abstracted for mysql" do
+    assert_equal "`parent_id`", order_by(:mysql, 'parent_id')
+    assert_equal "`parent_id`", order_by(:mysql2, 'parent_id')
+  end
+
+  test "sort order abstracted for postgres" do
+    assert_equal '"parent_id" NULLS FIRST', order_by(:postgresql, 'parent_id')
+  end
 end
