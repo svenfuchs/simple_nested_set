@@ -9,7 +9,7 @@ module SimpleNestedSet
         @num = 0
       end
 
-      def run(nested_set, sort_order = nil)
+      def run(nested_set, sort_order = :id)
         order_columns = ([:parent_id] + Array[sort_order]).uniq.compact
 
         db_adapter = nested_set.first.class.connection.instance_variable_get('@config')[:adapter].to_sym

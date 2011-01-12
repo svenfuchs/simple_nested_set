@@ -129,7 +129,7 @@ module SimpleNestedSet
       Rebuild::FromPaths.new.run(self)
     end
 
-    def rebuild_from_parents!(sort_order = nil)
+    def rebuild_from_parents!(sort_order = :id)
       Rebuild::FromParents.new.run(self, sort_order)
     end
 
