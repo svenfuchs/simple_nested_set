@@ -146,8 +146,8 @@ Tests are run with rake. The tests are run against sqlite3 by default. To change
 For PostgreSQL and MySQL the following configuration is assumed:
 
 <pre>
-  username: simple_nested_set
-  password: simple_nested_set
-  database: simple_nested_set_test
+  username: sns
+  password: sns
+  database: sns
   encoding: utf8
 </pre>

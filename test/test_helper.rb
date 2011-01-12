@@ -6,6 +6,7 @@ require 'fileutils'
 require 'logger'
 require 'bundler/setup'
 require 'erb'
+require 'yaml'
 
 require 'active_record'
 require 'test_declarative'
@@ -25,34 +26,19 @@ log = '/tmp/simple_nested_set_test.log'
 FileUtils.touch(log) unless File.exists?(log)
 ActiveRecord::Base.logger = Logger.new(log)
 
-case ENV['DATABASE']
-when 'postgresql'
-  DB_CONFIG = {
-    :adapter => 'postgresql',
-    :database => 'simple_nested_set_test',
-    :encoding => 'utf8',
-    :username => 'simple_nested_set',
-    :password => 'simple_nested_set',
-    :host => '127.0.0.1',
-    :port => '5432',
-    :min_messages => 'notice'
-  }
-when 'mysql'
-  DB_CONFIG = {
-    :adapter => 'mysql',
-    :database => 'simple_nested_set_test',
-    :encoding => 'utf8',
-    :username => 'simple_nested_set',
-    :password => 'simple_nested_set'
-  }
-else # sqlite3
-  DB_CONFIG = { :adapter => 'sqlite3', :database => ':memory:' }
+DatabaseCleaner.strategy = :truncation
+
+adapter = ENV['DATABASE'] || 'sqlite3'
+
+begin
+  db_configs = YAML.load_file( File.expand_path('../../config/database.yml', __FILE__) ).symbolize_keys
+  DB_CONFIG = db_configs[adapter.to_sym].symbolize_keys
+rescue Errno::ENOENT => e
+  DB_CONFIG = { :adapter => 'sqlite3', :database => ':memory:'}
 end
 
-puts "Running tests against #{DB_CONFIG[:adapter]}"
+puts "Running tests against #{adapter}"
 ActiveRecord::Base.establish_connection(DB_CONFIG)
-
-DatabaseCleaner.strategy = :truncation
 
 load File.expand_path('../fixtures.rb', __FILE__)
 
