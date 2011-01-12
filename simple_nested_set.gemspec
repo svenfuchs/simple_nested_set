@@ -4,7 +4,7 @@ require 'simple_nested_set/version'
 Gem::Specification.new do |s|
   s.name         = "simple_nested_set"
   s.version      = SimpleNestedSet::VERSION
-  s.authors      = ["Sven Fuchs"]
+  s.authors      = ["Sven Fuchs", "Matthias Viehweger"]
   s.email        = "svenfuchs@artweb-design.de"
   s.homepage     = "http://github.com/svenfuchs/simple_nested_set"
   s.summary      = "a simple to use nested set solution for ActiveRecord 3"
@@ -20,6 +20,10 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'test_declarative'
   s.add_development_dependency 'sqlite3-ruby'
+  s.add_development_dependency 'pg', '0.9.0'
+  s.add_development_dependency 'mysql2', '0.2.6'
   s.add_development_dependency 'database_cleaner', '0.5.2'
   s.add_development_dependency 'ruby-debug'
+
+  s.add_development_dependency 'rake'
 end
