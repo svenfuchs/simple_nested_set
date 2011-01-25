@@ -57,34 +57,23 @@ module SimpleNestedSet
     # FIXME we don't always want to call this on after_save, do we? it's only relevant when
     # either the structure or the slug has changed
     def denormalize!
+      sql = []
+
       case db_adapter
       when :mysql, :mysql2
-        joins, updates = [], []
+        sql << denormalize_query_mysql(:level) do |table|
+          table[:id].count.to_sql
+        end if node.has_attribute?(:level)
 
-        if node.has_attribute?(:level)
-          level_join, level_update = denormalize_level_queries
-          joins << level_join
-          updates << level_update
-        end
-
-        if node.has_attribute?(:path)
-          path_join, path_update = denormalize_path_queries
-          joins << path_join
-          updates << path_update
-        end
-
-        connection.execute(<<-SQL.strip) if updates.any?
-        UPDATE #{connection.quote_table_name(arel_table.name)}
-        #{joins.join("\n")}
-        SET #{updates.join(',')}
-        WHERE #{where_clauses.join(' AND ')}
-        SQL
+        sql << denormalize_query_mysql(:path) do |table|
+          group_concat(db_adapter, :slug)
+        end if node.has_attribute?(:path)
       else
-        sql = []
         sql << denormalize_level_query if node.has_attribute?(:level)
         sql << denormalize_path_query  if node.has_attribute?(:path)
-        update_all(sql.join(',')) unless sql.blank?
       end
+
+      update_all(sql.join(',')) unless sql.blank?
     end
 
     # Returns true if the node has the same scope as the given node
@@ -178,40 +167,26 @@ module SimpleNestedSet
       "path = (#{query.join(' AND ')})"
     end
 
-    # mysql
-    def denormalize_level_queries
-      aliaz = arel_table.as(:l)
-      subselect = [
-        aliaz.project(aliaz[:id].count.as('depth'), aliaz[:lft], aliaz[:rgt]).to_sql,
+    def denormalize_query_mysql(field)
+      synonym = field.to_s.reverse.to_sym
+      aliaz = arel_table.as("table_#{synonym}")
+
+      field_sql = yield aliaz
+
+      query = [
+        aliaz.project("#{field_sql} AS field_#{synonym}", aliaz[:lft], aliaz[:rgt]).to_sql,
         ' WHERE ',
         where_clauses.map { |clause| clause.gsub(arel_table.name, aliaz.table_alias.to_s) }.join(' AND ')
       ].join
 
-      join_alias = arel_table.as(:lev)
-      join_condition = join_alias[:lft].lt(arel_table[:lft]).and(join_alias[:rgt].gt(arel_table[:rgt])).to_sql
-
-      [
-        "INNER JOIN (#{subselect}) AS #{join_alias.table_alias} ON (#{join_condition})",
-        "level = #{join_alias.table_alias}.depth"
-      ]
-    end
-
-    # mysql
-    def denormalize_path_queries
-      aliaz = arel_table.as(:l)
-      subselect = [
-        aliaz.project(aliaz[:id].count.as('slug_agg'), aliaz[:lft], aliaz[:rgt]).to_sql,
-        ' WHERE ',
-        where_clauses.map { |clause| clause.gsub(arel_table.name, aliaz.table_alias.to_s) }.join(' AND ')
-      ].join
-
-      join_alias = arel_table.as(:pat)
-      join_condition = join_alias[:lft].lteq(arel_table[:lft]).and(join_alias[:rgt].gteq(arel_table[:rgt])).to_sql
-
-      [
-        "INNER JOIN (#{subselect}) AS #{join_alias.table_alias} ON (#{join_condition})",
-        "path = #{join_alias.table_alias}.slug_agg"
-      ]
+      <<-sql
+        #{field} = (
+          SELECT #{aliaz.table_alias.to_s}.field_#{synonym}
+          FROM (#{query}) AS #{aliaz.table_alias.to_s}
+          WHERE #{aliaz[:lft].lt(arel_table[:lft]).to_sql}
+            AND #{aliaz[:rgt].gt(arel_table[:rgt]).to_sql}
+        )
+      sql
     end
 
     def db_adapter
