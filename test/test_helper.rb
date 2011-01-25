@@ -7,6 +7,7 @@ require 'logger'
 require 'bundler/setup'
 require 'erb'
 require 'yaml'
+require 'redgreen' if Gem.available?('redgreen')
 
 require 'active_record'
 require 'test_declarative'
