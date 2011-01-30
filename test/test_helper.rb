@@ -6,6 +6,8 @@ require 'fileutils'
 require 'logger'
 require 'bundler/setup'
 require 'erb'
+require 'yaml'
+require 'redgreen' if Gem.available?('redgreen')
 
 require 'active_record'
 require 'test_declarative'
@@ -24,9 +26,20 @@ require 'simple_nested_set'
 log = '/tmp/simple_nested_set_test.log'
 FileUtils.touch(log) unless File.exists?(log)
 ActiveRecord::Base.logger = Logger.new(log)
-ActiveRecord::Base.establish_connection(:adapter => 'sqlite3', :database => ':memory:')
 
 DatabaseCleaner.strategy = :truncation
+
+adapter = ENV['DATABASE'] || 'sqlite3'
+
+begin
+  db_configs = YAML.load_file( File.expand_path('../../config/database.yml', __FILE__) ).symbolize_keys
+  DB_CONFIG = db_configs[adapter.to_sym].symbolize_keys
+rescue Errno::ENOENT => e
+  DB_CONFIG = { :adapter => 'sqlite3', :database => ':memory:'}
+end
+
+puts "Running tests against #{adapter}"
+ActiveRecord::Base.establish_connection(DB_CONFIG)
 
 load File.expand_path('../fixtures.rb', __FILE__)
 

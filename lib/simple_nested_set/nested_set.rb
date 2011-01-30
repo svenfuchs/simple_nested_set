@@ -53,12 +53,26 @@ module SimpleNestedSet
       end
     end
 
+    # FIXME This needs to be abstracted away into the SqlAbstraction module
     # FIXME we don't always want to call this on after_save, do we? it's only relevant when
     # either the structure or the slug has changed
     def denormalize!
       sql = []
-      sql << denormalize_level_query if node.has_attribute?(:level)
-      sql << denormalize_path_query  if node.has_attribute?(:path)
+
+      case db_adapter
+      when :mysql, :mysql2
+        sql << denormalize_query_mysql(:level) do |table|
+          table[:id].count.to_sql
+        end if node.has_attribute?(:level)
+
+        sql << denormalize_query_mysql(:path) do |table|
+          group_concat(db_adapter, :slug)
+        end if node.has_attribute?(:path)
+      else
+        sql << denormalize_level_query if node.has_attribute?(:level)
+        sql << denormalize_path_query  if node.has_attribute?(:path)
+      end
+
       update_all(sql.join(',')) unless sql.blank?
     end
 
@@ -129,10 +143,11 @@ module SimpleNestedSet
       Rebuild::FromPaths.new.run(self)
     end
 
-    def rebuild_from_parents!(sort_order = nil)
+    def rebuild_from_parents!(sort_order = :id)
       Rebuild::FromParents.new.run(self, sort_order)
     end
 
+    # sqlite3, postgresql
     def denormalize_level_query
       aliaz = arel_table.as(:l)
       query = aliaz.project(aliaz[:id].count).
@@ -142,6 +157,7 @@ module SimpleNestedSet
       "level = (#{query.join(' AND ')})"
     end
 
+    # sqlite3, postgresql
     def denormalize_path_query
       aliaz = arel_table.as(:l)
       query = aliaz.project(group_concat(db_adapter, :slug)).
@@ -149,6 +165,28 @@ module SimpleNestedSet
                     where(aliaz[:rgt].gteq(arel_table[:rgt]))
       query = [query.to_sql] + where_clauses.map { |clause| clause.gsub(arel_table.name, 'l') }
       "path = (#{query.join(' AND ')})"
+    end
+
+    def denormalize_query_mysql(field)
+      synonym = field.to_s.reverse.to_sym
+      aliaz = arel_table.as("table_#{synonym}")
+
+      field_sql = yield aliaz
+
+      query = [
+        aliaz.project("#{field_sql} AS field_#{synonym}", aliaz[:lft], aliaz[:rgt]).to_sql,
+        ' WHERE ',
+        where_clauses.map { |clause| clause.gsub(arel_table.name, aliaz.table_alias.to_s) }.join(' AND ')
+      ].join
+
+      <<-sql
+        #{field} = (
+          SELECT #{aliaz.table_alias.to_s}.field_#{synonym}
+          FROM (#{query}) AS #{aliaz.table_alias.to_s}
+          WHERE #{aliaz[:lft].lt(arel_table[:lft]).to_sql}
+            AND #{aliaz[:rgt].gt(arel_table[:rgt]).to_sql}
+        )
+      sql
     end
 
     def db_adapter

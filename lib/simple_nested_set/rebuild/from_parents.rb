@@ -1,19 +1,27 @@
 module SimpleNestedSet
   module Rebuild
     class FromParents
-      attr_writer :num
+      include SqlAbstraction
 
-      def num
-        @num ||= 0
+      attr_accessor :num
+
+      def initialize
+        @num = 0
       end
 
-      def run(nested_set, sort_order = nil)
-        order_columns = ([:parent_id] + Array[sort_order]).compact
+      def run(nested_set, sort_order = :id)
+        order_columns = ([:parent_id] + Array[sort_order]).uniq.compact
+
+        db_adapter = nested_set.first.class.connection.instance_variable_get('@config')[:adapter].to_sym
+
+        order_clause = order_columns.map do |col|
+          order_by(db_adapter, col)
+        end
 
         nodes = if nested_set.respond_to?(:except)
-                  nested_set.except(:order).order(order_columns)
+                  nested_set.except(:order).order(order_clause)
                 else
-                  nested_set.reorder(order_columns)
+                  nested_set.reorder(order_clause)
                 end.to_a
 
         renumber(nodes.dup)

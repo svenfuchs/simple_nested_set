@@ -131,3 +131,23 @@ You can call #inspect_tree on both nested_set scopes and node instances to get a
           └── Node id: 6
 </pre>
 
+h2. Developing
+
+h3. Running tests
+
+Tests are run with rake. The tests are run against sqlite3 by default. To change this, you can set an environment variable:
+
+<pre>
+  DATABASE=sqlite3 rake
+  DATABASE=postgresql rake
+  DATABASE=mysql rake
+</pre>
+
+For PostgreSQL and MySQL the following configuration is assumed:
+
+<pre>
+  username: sns
+  password: sns
+  database: sns
+  encoding: utf8
+</pre>

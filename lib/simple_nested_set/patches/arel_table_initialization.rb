@@ -67,8 +67,8 @@ when '1.0.1'
       end
     end
   end
-when '2.0.6'
-  Gem.patching('arel', '2.0.6') do
+when /2\.0\.[5-7]/
+  Gem.patching('arel', Arel::VERSION) do
     Arel::Table.class_eval do
       attr_reader :options # this line is added
 

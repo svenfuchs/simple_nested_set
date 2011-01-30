@@ -211,7 +211,7 @@ class NestedSetTest < Test::Unit::TestCase
     assert_equal [0, 1, 1, 2], nodes.map { |node| node.level }
   end
 
-  test "node.level returns the node's path" do
+  test "node.path returns the node's path" do
     assert_equal ['root', 'root/child_1', 'root/child_2', 'root/child_2/child_2_1'], nodes.map { |node| node.path }
   end
 

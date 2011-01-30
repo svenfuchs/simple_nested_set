@@ -14,6 +14,10 @@ class ArelTest < Test::Unit::TestCase
     query = query.join(' AND ')
 
     expected = %(SELECT COUNT("l"."id") FROM "nodes" "l" WHERE "l"."lft" < "nodes"."lft" AND "l"."rgt" < "nodes"."rgt" AND ("l"."type" = 'Node') AND ("l"."scope_id" IS NULL))
+
+    # quoting character mismatch: mysql uses `, postgresql and sqlite3 use "
+    query.gsub!('`', '"')
+
     assert_equal expected, query
   end
 end

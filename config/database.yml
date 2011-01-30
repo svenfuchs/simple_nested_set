@@ -1,0 +1,24 @@
+defaults: &defaults
+  username: sns
+  password: sns
+  database: sns
+  encoding: utf8
+
+postgresql:
+  <<: *defaults
+  adapter: postgresql
+  host: 127.0.0.1
+  port: 5432
+  min_messages: notice
+
+mysql:
+  <<: *defaults
+  adapter: mysql2
+
+mysql2:
+  <<: *defaults
+  adapter: mysql2
+
+sqlite3:
+  adapter: sqlite3
+  database: ':memory:'
