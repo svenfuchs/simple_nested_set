@@ -56,4 +56,17 @@ class NestedSetTest < Test::Unit::TestCase
     assert_equal ['foo', 1, 2, 'foo'], [foo.slug, foo.lft, foo.rgt, foo.path]
     assert_equal ['bar', 3, 4, 'bar'], [bar.slug, bar.lft, bar.rgt, bar.path]
   end
+
+  test "load_tree on a association doesn't destroy collection" do
+    owner = NodeOwner.create!
+    foo_node = owner.nodes.create!(:slug => 'foo', :scope_id => 3)
+    owner.nodes.create!(:slug => 'bar', :scope_id => 3, :parent => foo_node)
+    owner.reload
+    owner.nodes.reset
+    owner.nodes.roots.each { |root| root.load_tree }
+
+    assert_equal [owner.id, owner.id], owner.nodes.map(&:node_owner_id)
+  end
+
+
 end

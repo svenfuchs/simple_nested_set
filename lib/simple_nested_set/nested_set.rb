@@ -101,7 +101,6 @@ module SimpleNestedSet
     def populate_associations(nodes)
       node.children.target = nodes.select do |child|
         next unless child.parent_id == node.id
-        nodes.delete(child)
         child.nested_set.populate_associations(nodes)
         child.parent = node
       end
