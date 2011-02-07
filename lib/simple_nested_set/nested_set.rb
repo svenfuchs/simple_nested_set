@@ -25,7 +25,7 @@ module SimpleNestedSet
 
       def extract_attributes!(attributes)
         attributes.slice(*SimpleNestedSet::ATTRIBUTES).tap do
-          attributes.except!(*(SimpleNestedSet::ATTRIBUTES - [:path]))
+          attributes.except!(*(SimpleNestedSet::ATTRIBUTES - [:path, :parent, :parent_id]))
         end if attributes.respond_to?(:slice)
       end
     end
@@ -40,14 +40,15 @@ module SimpleNestedSet
     end
 
     def save!
-      attributes = node.instance_variable_get(:@_nested_set_attributes)
+      attributes = node.instance_variable_get(:@_nested_set_attributes) || {}
       node.instance_variable_set(:@_nested_set_attributes, nil)
+      attributes.merge!(:parent_id => node.parent_id) if node.parent_id_changed?
 
       if self.class.move_after_save
         move_by_attributes(attributes) unless attributes.blank?
         denormalize!
       elsif attributes
-        attributes.each do |key, value|
+        attributes.except(:parent_id).each do |key, value|
           node.update_attribute(key, value)
         end
       end
