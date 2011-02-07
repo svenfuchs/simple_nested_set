@@ -190,4 +190,13 @@ class NestedSetTest < Test::Unit::TestCase
       Node.create!(:slug => 'nil_value', :parent => nil)
     end
   end
+
+  test "node.parent = parent is equal to node.update_attributes(:parent_id => parent)" do
+    child_1_1 = Node.new(:slug => 'child_1_1', :scope_id => 1, :parent => child_1)
+    child_1_2 = Node.new(:slug => 'child_1_2', :scope_id => 1) { |node| node.parent = child_1 }
+
+    [child_1_1, child_1_2].each { |node| node.save; node.reload }
+    child_1.reload
+    assert_equal [child_1_1, child_1_2], child_1.descendants
+  end
 end
