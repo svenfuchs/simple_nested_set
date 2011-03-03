@@ -62,19 +62,44 @@ module SimpleNestedSet
 
       case db_adapter
       when :mysql, :mysql2
-        sql << denormalize_query_mysql(:level) do |table|
-          table[:id].count.to_sql
-        end if node.has_attribute?(:level)
+        sql << <<-sql if node.has_attribute?(:level)
+`level` = (
+  SELECT tmp.lev
+  FROM (
+    SELECT n0.id, count(*) AS lev
+    FROM #{arel_table.name} AS n0
+      CROSS JOIN #{arel_table.name} AS n1
+    WHERE n1.lft < n0.lft AND n1.rgt > n0.rgt
+    GROUP BY n0.id
+  ) AS tmp
+  WHERE ( #{arel_table.name}.id = tmp.id )
+)
+        sql
 
-        sql << denormalize_query_mysql(:path) do |table|
-          group_concat(db_adapter, :slug)
-        end if node.has_attribute?(:path)
+        sql << <<-sql if node.has_attribute?(:path)
+`path` = (
+  SELECT tmp.pat
+  FROM (
+    SELECT n3.id, #{group_concat(db_adapter, "n2`.`slug" )} AS pat
+    FROM #{arel_table.name} AS n3
+      CROSS JOIN #{arel_table.name} AS n2
+    WHERE n2.lft < n3.lft AND n2.rgt > n3.rgt
+    GROUP BY n3.id
+  ) AS tmp
+  where ( #{arel_table.name}.id = tmp.id )
+)
+        sql
       else
         sql << denormalize_level_query if node.has_attribute?(:level)
         sql << denormalize_path_query  if node.has_attribute?(:path)
       end
 
       update_all(sql.join(',')) unless sql.blank?
+
+      if [:mysql, :mysql2].include?(db_adapter)
+        update_all("`level` = 0", "`level` IS NULL")
+        update_all("`path` = `slug`", "`path` IS NULL")
+      end
     end
 
     # Returns true if the node has the same scope as the given node
@@ -167,27 +192,27 @@ module SimpleNestedSet
       "path = (#{query.join(' AND ')})"
     end
 
-    def denormalize_query_mysql(field)
-      synonym = field.to_s.reverse.to_sym
-      aliaz = arel_table.as("table_#{synonym}")
-
-      field_sql = yield aliaz
-
-      query = [
-        aliaz.project("#{field_sql} AS field_#{synonym}", aliaz[:lft], aliaz[:rgt]).to_sql,
-        ' WHERE ',
-        where_clauses.map { |clause| clause.gsub(arel_table.name, aliaz.table_alias.to_s) }.join(' AND ')
-      ].join
-
-      <<-sql
-        #{field} = (
-          SELECT #{aliaz.table_alias.to_s}.field_#{synonym}
-          FROM (#{query}) AS #{aliaz.table_alias.to_s}
-          WHERE #{aliaz[:lft].lt(arel_table[:lft]).to_sql}
-            AND #{aliaz[:rgt].gt(arel_table[:rgt]).to_sql}
-        )
-      sql
-    end
+    # def denormalize_query_mysql(field)
+    #   synonym = field.to_s.reverse.to_sym
+    #   aliaz = arel_table.as("table_#{synonym}")
+    #
+    #   field_sql = yield aliaz
+    #
+    #   query = [
+    #     aliaz.project("#{field_sql} AS field_#{synonym}", aliaz[:lft], aliaz[:rgt]).to_sql,
+    #     ' WHERE ',
+    #     where_clauses.map { |clause| clause.gsub(arel_table.name, aliaz.table_alias.to_s) }.join(' AND ')
+    #   ].join
+    #
+    #   <<-sql
+    #     #{field} = (
+    #       SELECT #{aliaz.table_alias.to_s}.field_#{synonym}
+    #       FROM (#{query}) AS #{aliaz.table_alias.to_s}
+    #       WHERE #{aliaz[:lft].lt(arel_table[:lft]).to_sql}
+    #         AND #{aliaz[:rgt].gt(arel_table[:rgt]).to_sql}
+    #     )
+    #   sql
+    # end
 
     def db_adapter
       node.class.connection.instance_variable_get('@config')[:adapter].to_sym
