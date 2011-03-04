@@ -76,17 +76,22 @@ module SimpleNestedSet
 )
         sql
 
+        scoping = [
+          'n1.lft <= n0.lft AND n1.rgt >= n0.rgt',
+          where_clauses.map { |clause| clause.gsub(arel_table.name, 'n1') }
+        ].flatten.compact.join(' AND ')
+
         sql << <<-sql if node.has_attribute?(:path)
 `path` = (
   SELECT tmp.pat
   FROM (
-    SELECT n3.id, #{group_concat(db_adapter, "n2`.`slug" )} AS pat
-    FROM #{arel_table.name} AS n3
-      CROSS JOIN #{arel_table.name} AS n2
-    WHERE n2.lft < n3.lft AND n2.rgt > n3.rgt
-    GROUP BY n3.id
+    SELECT n0.id, #{group_concat(db_adapter, "n1`.`slug" )} AS pat
+    FROM #{arel_table.name} AS n0
+      CROSS JOIN #{arel_table.name} AS n1
+    WHERE #{scoping}
+    GROUP BY n0.id
   ) AS tmp
-  where ( #{arel_table.name}.id = tmp.id )
+  WHERE ( #{arel_table.name}.id = tmp.id )
 )
         sql
       else
