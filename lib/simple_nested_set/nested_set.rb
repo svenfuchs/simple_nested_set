@@ -102,8 +102,8 @@ module SimpleNestedSet
       update_all(sql.join(',')) unless sql.blank?
 
       if [:mysql, :mysql2].include?(db_adapter)
-        update_all("`level` = 0", "`level` IS NULL")
-        update_all("`path` = `slug`", "`path` IS NULL")
+        update_all("`level` = 0", "`level` IS NULL") if node.has_attribute?(:level)
+        update_all("`path` = `slug`", "`path` IS NULL") if node.has_attribute?(:slug) && node.has_attribute?(:path)
       end
     end
 
