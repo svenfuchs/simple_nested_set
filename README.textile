@@ -155,3 +155,17 @@ For PostgreSQL and MySQL the following configuration is assumed:
 </pre>
 
 The testsuite is being run against sqlite3 on travis: http://travis-ci.org/svenfuchs/simple_nested_set
+
+h2. Contributions
+
+This gem is a collaborative work of:
+
+* Sven Fuchs
+* Matthias Viehweger
+* Artem Ignatiev
+* Levin Alexander
+
+* Cristiam Castillo
+* Steve Hoeksema
+
+If you want to participate, open an issue or send a pull-request.
