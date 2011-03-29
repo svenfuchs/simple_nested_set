@@ -4,6 +4,8 @@ SimpleNestedSet implements the "nested set pattern":http://en.wikipedia.org/wiki
 
 It aims to be a no-fluff, simple and clean implementation based on and making heavy use of ActiveRecord scopes and Arel, making it as easy as possible to work with nested sets.
 
+"!http://travis-ci.org/svenfuchs/simple_nested_set.png!":http://travis-ci.org/svenfuchs/simple_nested_set
+
 h2. Installation
 
 Just add it to your Gemfile:
@@ -151,3 +153,5 @@ For PostgreSQL and MySQL the following configuration is assumed:
   database: sns
   encoding: utf8
 </pre>
+
+The testsuite is being run against sqlite3 on travis: http://travis-ci.org/svenfuchs/simple_nested_set
