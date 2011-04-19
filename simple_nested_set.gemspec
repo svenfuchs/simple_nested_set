@@ -19,7 +19,11 @@ Gem::Specification.new do |s|
   s.add_dependency             'gem_patching'
 
   s.add_development_dependency 'test_declarative'
-  s.add_development_dependency 'ruby-debug'
+  if RUBY_VERSION.include? '1.9'
+    s.add_development_dependency 'ruby-debug19'
+  else
+    s.add_development_dependency 'ruby-debug'
+  end
   s.add_development_dependency 'rake'
 
   s.add_development_dependency 'sqlite3-ruby'
