@@ -30,6 +30,11 @@ class NestedSetTest < Test::Unit::TestCase
     assert child_1.root?
   end
 
+  test "node.move_path moves root node to root position" do
+    root.move_to_path(root.path)
+    assert root.root?
+  end
+
   test "node.move_path moves the node to the given path (w/ a non-root path)" do
     child_1.move_to_path("#{child_2_1.path}/#{child_1.slug}")
     assert_equal child_2_1, child_1.parent
