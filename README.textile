@@ -164,6 +164,7 @@ This gem is a collaborative work of:
 * Matthias Viehweger
 * Artem Ignatiev
 * Levin Alexander
+* Niklas Hofer
 
 * Cristiam Castillo
 * Steve Hoeksema
