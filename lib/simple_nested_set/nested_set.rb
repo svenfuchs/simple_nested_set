@@ -86,8 +86,8 @@ module SimpleNestedSet
   SELECT tmp.pat
   FROM (
     SELECT n0.id, #{group_concat(db_adapter, "n1`.`slug" )} AS pat
-    FROM #{arel_table.name} AS n0
-      CROSS JOIN #{arel_table.name} AS n1
+    FROM (SELECT * FROM #{arel_table.name} ORDER BY `lft`) AS n0
+      CROSS JOIN (SELECT * FROM #{arel_table.name} ORDER BY `lft`) AS n1
     WHERE #{scoping}
     GROUP BY n0.id
   ) AS tmp
