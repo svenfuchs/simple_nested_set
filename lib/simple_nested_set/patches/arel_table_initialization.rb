@@ -67,7 +67,7 @@ when '1.0.1'
       end
     end
   end
-when /2\.0\.[5-9]/, '2.1.0' # the patch seems to apply to 2.1.0 as well
+when /^2\.0\.[5-9]$/, /^2\.1\.[01]$/, '2.0.10'
   Gem.patching('arel', Arel::VERSION) do
     Arel::Table.class_eval do
       attr_reader :options # this line is added
