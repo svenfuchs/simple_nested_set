@@ -64,4 +64,17 @@ class NestedSetTest < Test::Unit::TestCase
     assert_equal [child_1, child_2_1].sort, Node.leaves(:scope_id => 1).sort
     assert_equal [unrelated_root], Node.leaves(:scope_id => 2)
   end
+
+  test "trees returns the root nodes with all children populated" do
+    roots = Node.trees
+
+    assert roots.first.children.loaded?
+    assert_equal [child_1, child_2], roots.first.children
+
+    assert roots.first.children.last.children.loaded?
+    assert_equal [child_2_1], root.children.last.children
+
+    assert roots.first.children.first.parent.loaded?
+    assert_equal root, root.children.first.parent
+  end
 end

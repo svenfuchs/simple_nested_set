@@ -15,12 +15,12 @@ module SimpleNestedSet
       super(attributes, *args)
     end
 
-    # recursively populates the parent and children associations of self and
-    # all descendants using one query
-    def load_tree
+    # Returns self with the children association recursively pre-populated
+    def as_tree
       nested_set.populate_associations(descendants)
       self
     end
+    alias :load_tree :as_tree
 
     # Returns true if this is a root node.
     def root?

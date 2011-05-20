@@ -10,6 +10,14 @@ module SimpleNestedSet
       set_callback(:move, :after, *args, &block)
     end
 
+    # Returns all roots recursively pre-populated with their children associations
+    def trees(scope = nil)
+      nodes = nested_set_class.scope(scope)
+      nodes.select(&:root?).each do |root|
+        root.nested_set.populate_associations(nodes.select { |node| node.descendent_of?(root) })
+      end
+    end
+
     # Returns the first root node (with the given scope if any)
     def root(scope = nil)
       roots(scope).first
