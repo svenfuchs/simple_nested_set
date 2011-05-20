@@ -1,25 +1,26 @@
 require 'gem_patching'
 
-case Arel::VERSION
-when '1.0.1'
-  Gem.patching('arel', '1.0.1') do
-    # Arel 1.0.0.rc1 Arel::Table#initialize and #table_exists? does not support
-    # instantiating an Arel::Table before the database table has been created.
-    #
-    # This happens in adva-cms2 during the setup of the cucumber test application
-    # where the environment has to be loaded (and thus models will be loaded) and
-    # migrations will only be run afterwards.
-    #
-    # see http://github.com/rails/arel/commit/19c5a95f1093653d2628dfb2f53637b0425dbba4#commitcomment-133903
-    #
-    # Also, in Arel 1.0.0.rc1 Arel::Table#initialize @options won't be initialized
-    # if the second argument is an engine, so #as will crash subsequently.
-    #
-    # These issues have been fixed in:
-    #
-    # http://github.com/svenfuchs/arel/commit/4b476404cbbecfedc255039c66c6eececb667d7f
-    # http://github.com/svenfuchs/arel/commit/3b1b24551106bc116cba404c992b513c5fbd137b
-    Arel::Table.class_eval do
+# actual patches
+# patch for Arel 1.0.1
+module SimpleNestedSetPatchArel1
+  # Arel 1.0.0.rc1 Arel::Table#initialize and #table_exists? does not support
+  # instantiating an Arel::Table before the database table has been created.
+  #
+  # This happens in adva-cms2 during the setup of the cucumber test application
+  # where the environment has to be loaded (and thus models will be loaded) and
+  # migrations will only be run afterwards.
+  #
+  # see http://github.com/rails/arel/commit/19c5a95f1093653d2628dfb2f53637b0425dbba4#commitcomment-133903
+  #
+  # Also, in Arel 1.0.0.rc1 Arel::Table#initialize @options won't be initialized
+  # if the second argument is an engine, so #as will crash subsequently.
+  #
+  # These issues have been fixed in:
+  #
+  # http://github.com/svenfuchs/arel/commit/4b476404cbbecfedc255039c66c6eececb667d7f
+  # http://github.com/svenfuchs/arel/commit/3b1b24551106bc116cba404c992b513c5fbd137b
+  module Arel
+    class Table
       def initialize(name, options = {})
         @name = name.to_s
         @table_exists = nil
@@ -67,36 +68,30 @@ when '1.0.1'
       end
     end
   end
-when /^2\.0\.[5-9]$/, /^2\.1\.[01]$/, '2.0.10'
+end
+
+# patch for Arel 2.0.x
+module SimpleNestedSetPatchArel2
+  attr_reader :options
+
+  def initialize(name, options = Arel::Tanle.engine)
+    @options = engine if Hash === engine
+    super
+  end
+
+  def as(table_alias)
+    @options ||= {}
+    Arel::Table.new(name, options.merge(:as => table_alias))
+  end
+end
+
+case Arel::VERSION
+when '1.0.1'
+  Gem.patching('arel', '1.0.1') do
+    Arel::Table.send :include, SimpleNestedSetPatchArel1
+  end
+when /^2\.0\.[5-9]$/, /^2\.1\.[01]$/, '2.0.10' # successfully tested, could be '~> 2.0.5'
   Gem.patching('arel', Arel::VERSION) do
-    Arel::Table.class_eval do
-      attr_reader :options # this line is added
-
-      def initialize name, engine = Arel::Table.engine
-        @name    = name.to_s
-        @engine  = engine
-        @columns = nil
-        @aliases = []
-        @table_alias = nil
-        @primary_key = nil
-
-        if Hash === engine
-          @options = engine # this line has been added
-          @engine  = engine[:engine] || Arel::Table.engine
-          @columns = attributes_for engine[:columns]
-
-          # Sometime AR sends an :as parameter to table, to let the table know
-          # that it is an Alias.  We may want to override new, and return a
-          # TableAlias node?
-          @table_alias = engine[:as] unless engine[:as].to_s == @name
-        end
-      end
-
-      # this whole method is new
-      def as(table_alias)
-        @options ||= {}
-        Arel::Table.new(name, options.merge(:as => table_alias))
-      end
-    end
+    Arel::Table.send :include, SimpleNestedSetPatchArel2
   end
 end
