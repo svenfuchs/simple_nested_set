@@ -26,10 +26,10 @@ class NestedSetTest < Test::Unit::TestCase
   # CALLBACKS
 
   test "before_move get's called after a new node was created and before it is now moved to its new parent" do
-    parent_id = false
-    Node.send(:before_move) { |node| parent_id = node.parent_id }
+    lft = nil
+    Node.send(:before_move) { |node| lft = node.lft }
     Node.create!(:scope_id => 1, :parent_id => child_2.id)
-    assert_nil parent_id
+    assert child_2.rgt < lft
   end
 
   test "before_move get's called before an existing node is moved" do

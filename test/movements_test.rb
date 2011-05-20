@@ -30,6 +30,11 @@ class NestedSetTest < Test::Unit::TestCase
     assert child_1.root?
   end
 
+  test "node.move_path moves root node to root position" do
+    root.move_to_path(root.path)
+    assert root.root?
+  end
+
   test "node.move_path moves the node to the given path (w/ a non-root path)" do
     child_1.move_to_path("#{child_2_1.path}/#{child_1.slug}")
     assert_equal child_2_1, child_1.parent
@@ -189,5 +194,14 @@ class NestedSetTest < Test::Unit::TestCase
     assert_nothing_raised do
       Node.create!(:slug => 'nil_value', :parent => nil)
     end
+  end
+
+  test "node.parent = parent is equal to node.update_attributes(:parent_id => parent)" do
+    child_1_1 = Node.new(:slug => 'child_1_1', :scope_id => 1, :parent => child_1)
+    child_1_2 = Node.new(:slug => 'child_1_2', :scope_id => 1) { |node| node.parent = child_1 }
+
+    [child_1_1, child_1_2].each { |node| node.save; node.reload }
+    child_1.reload
+    assert_equal [child_1_1, child_1_2], child_1.descendants
   end
 end

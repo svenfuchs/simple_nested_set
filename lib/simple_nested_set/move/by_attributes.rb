@@ -36,7 +36,7 @@ module SimpleNestedSet
         end
 
         def move_by_parent_id?
-          attributes.key?(:parent_id) && parent_id != node.parent_id
+          node.parent_id_changed?
         end
 
         def move_by_left_id
@@ -52,7 +52,7 @@ module SimpleNestedSet
         end
 
         def parent_id
-          attributes[:parent_id].blank? ? nil : attributes[:parent_id].to_i
+          attributes[:parent_id] == 0 ? nil : attributes[:parent_id]
         end
 
         def left_id

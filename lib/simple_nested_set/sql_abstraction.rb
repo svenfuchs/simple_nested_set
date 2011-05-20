@@ -7,7 +7,7 @@ module SimpleNestedSet
       when :sqlite, :sqlite3
         "GROUP_CONCAT(#{field}, '#{separator}')"
       when :mysql, :mysql2
-        "GROUP_CONCAT(`#{field}`, '#{separator}')"
+        "GROUP_CONCAT(`#{field}` SEPARATOR '#{separator}')"
       when :postgresql
         "array_to_string(array_agg(\"#{field}\"), '#{separator}')"
       else

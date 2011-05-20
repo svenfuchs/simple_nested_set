@@ -16,7 +16,7 @@ module SimpleNestedSet
       after_save     lambda { |r| r.nested_set.save! }
 
       belongs_to :parent, :class_name => self.name
-      has_many :children, :foreign_key => :parent_id, :class_name => self.name
+      has_many :children, :foreign_key => :parent_id, :class_name => self.name, :order => :lft
 
       default_scope :order => :lft
 

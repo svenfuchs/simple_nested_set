@@ -87,6 +87,9 @@ class NestedSetTest < Test::Unit::TestCase
     assert_equal root, child_1.parent
     assert_equal root, child_2.parent
     assert_equal child_2, child_2_1.parent
+
+    @child_1_1 = Node.new(:slug => 'child_1_1', :scope_id => 1, :parent => child_1)
+    assert_equal child_1, @child_1_1.parent
   end
 
   test "node.ancestors returns the node's ancestors" do

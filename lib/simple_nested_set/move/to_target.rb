@@ -71,7 +71,9 @@ module SimpleNestedSet
             when :child ; target.rgt
             when :left  ; target.lft
             when :right ; target.rgt + 1
-            when :root  ; roots.empty? ? 1 : roots.last.rgt + 1
+            when :root 
+              r = roots.where('id <> ?', node.id)
+              r.empty?? 1 : r.last.rgt + 1
           end
           bound > node.rgt ? bound - 1 : bound
         end

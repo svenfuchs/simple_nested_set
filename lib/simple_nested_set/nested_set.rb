@@ -25,7 +25,7 @@ module SimpleNestedSet
 
       def extract_attributes!(attributes)
         attributes.slice(*SimpleNestedSet::ATTRIBUTES).tap do
-          attributes.except!(*(SimpleNestedSet::ATTRIBUTES - [:path]))
+          attributes.except!(*(SimpleNestedSet::ATTRIBUTES - [:path, :parent, :parent_id]))
         end if attributes.respond_to?(:slice)
       end
     end
@@ -40,14 +40,15 @@ module SimpleNestedSet
     end
 
     def save!
-      attributes = node.instance_variable_get(:@_nested_set_attributes)
+      attributes = node.instance_variable_get(:@_nested_set_attributes) || {}
       node.instance_variable_set(:@_nested_set_attributes, nil)
+      attributes.merge!(:parent_id => node.parent_id) if node.parent_id_changed?
 
       if self.class.move_after_save
         move_by_attributes(attributes) unless attributes.blank?
         denormalize!
       elsif attributes
-        attributes.each do |key, value|
+        attributes.except(:parent_id).each do |key, value|
           node.update_attribute(key, value)
         end
       end
@@ -61,19 +62,49 @@ module SimpleNestedSet
 
       case db_adapter
       when :mysql, :mysql2
-        sql << denormalize_query_mysql(:level) do |table|
-          table[:id].count.to_sql
-        end if node.has_attribute?(:level)
+        sql << <<-sql if node.has_attribute?(:level)
+`level` = (
+  SELECT tmp.lev
+  FROM (
+    SELECT n0.id, count(*) AS lev
+    FROM #{arel_table.name} AS n0
+      CROSS JOIN #{arel_table.name} AS n1
+    WHERE n1.lft < n0.lft AND n1.rgt > n0.rgt
+    GROUP BY n0.id
+  ) AS tmp
+  WHERE ( #{arel_table.name}.id = tmp.id )
+)
+        sql
 
-        sql << denormalize_query_mysql(:path) do |table|
-          group_concat(db_adapter, :slug)
-        end if node.has_attribute?(:path)
+        scoping = [
+          'n1.lft <= n0.lft AND n1.rgt >= n0.rgt',
+          where_clauses.map { |clause| clause.gsub(arel_table.name, 'n1') }
+        ].flatten.compact.join(' AND ')
+
+        sql << <<-sql if node.has_attribute?(:path)
+`path` = (
+  SELECT tmp.pat
+  FROM (
+    SELECT n0.id, #{group_concat(db_adapter, "n1`.`slug" )} AS pat
+    FROM (SELECT * FROM #{arel_table.name} ORDER BY `lft`) AS n0
+      CROSS JOIN (SELECT * FROM #{arel_table.name} ORDER BY `lft`) AS n1
+    WHERE #{scoping}
+    GROUP BY n0.id
+  ) AS tmp
+  WHERE ( #{arel_table.name}.id = tmp.id )
+)
+        sql
       else
         sql << denormalize_level_query if node.has_attribute?(:level)
         sql << denormalize_path_query  if node.has_attribute?(:path)
       end
 
       update_all(sql.join(',')) unless sql.blank?
+
+      if [:mysql, :mysql2].include?(db_adapter)
+        update_all("`level` = 0", "`level` IS NULL") if node.has_attribute?(:level)
+        update_all("`path` = `slug`", "`path` IS NULL") if node.has_attribute?(:slug) && node.has_attribute?(:path)
+      end
     end
 
     # Returns true if the node has the same scope as the given node
@@ -166,27 +197,27 @@ module SimpleNestedSet
       "path = (#{query.join(' AND ')})"
     end
 
-    def denormalize_query_mysql(field)
-      synonym = field.to_s.reverse.to_sym
-      aliaz = arel_table.as("table_#{synonym}")
-
-      field_sql = yield aliaz
-
-      query = [
-        aliaz.project("#{field_sql} AS field_#{synonym}", aliaz[:lft], aliaz[:rgt]).to_sql,
-        ' WHERE ',
-        where_clauses.map { |clause| clause.gsub(arel_table.name, aliaz.table_alias.to_s) }.join(' AND ')
-      ].join
-
-      <<-sql
-        #{field} = (
-          SELECT #{aliaz.table_alias.to_s}.field_#{synonym}
-          FROM (#{query}) AS #{aliaz.table_alias.to_s}
-          WHERE #{aliaz[:lft].lt(arel_table[:lft]).to_sql}
-            AND #{aliaz[:rgt].gt(arel_table[:rgt]).to_sql}
-        )
-      sql
-    end
+    # def denormalize_query_mysql(field)
+    #   synonym = field.to_s.reverse.to_sym
+    #   aliaz = arel_table.as("table_#{synonym}")
+    #
+    #   field_sql = yield aliaz
+    #
+    #   query = [
+    #     aliaz.project("#{field_sql} AS field_#{synonym}", aliaz[:lft], aliaz[:rgt]).to_sql,
+    #     ' WHERE ',
+    #     where_clauses.map { |clause| clause.gsub(arel_table.name, aliaz.table_alias.to_s) }.join(' AND ')
+    #   ].join
+    #
+    #   <<-sql
+    #     #{field} = (
+    #       SELECT #{aliaz.table_alias.to_s}.field_#{synonym}
+    #       FROM (#{query}) AS #{aliaz.table_alias.to_s}
+    #       WHERE #{aliaz[:lft].lt(arel_table[:lft]).to_sql}
+    #         AND #{aliaz[:rgt].gt(arel_table[:rgt]).to_sql}
+    #     )
+    #   sql
+    # end
 
     def db_adapter
       node.class.connection.instance_variable_get('@config')[:adapter].to_sym
