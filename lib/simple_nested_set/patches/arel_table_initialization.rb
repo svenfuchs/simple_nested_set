@@ -73,10 +73,26 @@ when /^2\.0\.[5-9]$/, /^2\.1\.[01]$/, '2.0.10'
       attr_reader :options # this line is added
 
       def initialize name, engine = Arel::Table.engine
-        @options = engine if Hash === engine
-        super name, engine
+        @name    = name.to_s
+        @engine  = engine
+        @columns = nil
+        @aliases = []
+        @table_alias = nil
+        @primary_key = nil
+
+        if Hash === engine
+          @options = engine # this line has been added
+          @engine  = engine[:engine] || Arel::Table.engine
+          @columns = attributes_for engine[:columns]
+
+          # Sometime AR sends an :as parameter to table, to let the table know
+          # that it is an Alias.  We may want to override new, and return a
+          # TableAlias node?
+          @table_alias = engine[:as] unless engine[:as].to_s == @name
+        end
       end
 
+      # this whole method is new
       def as(table_alias)
         @options ||= {}
         Arel::Table.new(name, options.merge(:as => table_alias))
