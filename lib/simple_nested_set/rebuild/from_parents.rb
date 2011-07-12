@@ -10,6 +10,8 @@ module SimpleNestedSet
       end
 
       def run(nested_set, sort_order = :id)
+        nested_set.where(:parent_id => nil).update_all(:parent_id => 0)
+
         order_columns = ([:parent_id] + Array[sort_order]).uniq.compact
 
         db_adapter = nested_set.first.class.connection.instance_variable_get('@config')[:adapter].to_sym
@@ -25,7 +27,11 @@ module SimpleNestedSet
                 end.to_a
 
         renumber(nodes.dup)
-        nodes.each(&:save)
+        result = nodes.each(&:save)
+
+        nested_set.where(:parent_id => 0).update_all(:parent_id => nil)
+
+        result
       end
 
       def renumber(nodes)
@@ -45,7 +51,7 @@ module SimpleNestedSet
       end
 
       def child?(node, child)
-        if child.root?
+        if child.root? || child.parent_id == 0
           false
         elsif direct_child?(node, child)
           true
