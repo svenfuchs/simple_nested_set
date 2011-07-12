@@ -19,69 +19,76 @@ module SimpleNestedSetPatchArel1
   #
   # http://github.com/svenfuchs/arel/commit/4b476404cbbecfedc255039c66c6eececb667d7f
   # http://github.com/svenfuchs/arel/commit/3b1b24551106bc116cba404c992b513c5fbd137b
-  module Arel
-    class Table
-      def initialize(name, options = {})
-        @name = name.to_s
-        @table_exists = nil
-        @table_alias = nil
-        @christener = Arel::Sql::Christener.new
-        @attributes = nil
-        @matching_attributes = nil
+  def initialize(name, options = {})
+    @name = name.to_s
+    @table_exists = nil
+    @table_alias = nil
+    @christener = Arel::Sql::Christener.new
+    @attributes = nil
+    @matching_attributes = nil
 
-        if options.is_a?(Hash)
-          @options = options
-          @engine = options[:engine] || Arel::Table.engine
+    if options.is_a?(Hash)
+      @options = options
+      @engine = options[:engine] || Arel::Table.engine
 
-          if options[:as]
-            as = options[:as].to_s
-            @table_alias = as unless as == @name
-          end
-        else
-          @engine = options # Table.new('foo', engine)
-          @options = {}
-        end
-
-        if @engine.connection
-          begin
-            require "arel/engines/sql/compilers/#{@engine.adapter_name.downcase}_compiler"
-          rescue LoadError
-            begin
-              # try to load an externally defined compiler, in case this adapter has defined the compiler on its own.
-              require "#{@engine.adapter_name.downcase}/arel_compiler"
-            rescue LoadError
-              raise "#{@engine.adapter_name} is not supported by Arel."
-            end
-          end
-
-          @@tables ||= engine.connection.tables
-        end
+      if options[:as]
+        as = options[:as].to_s
+        @table_alias = as unless as == @name
       end
-
-      def as(table_alias)
-        @options ||= {}
-        Arel::Table.new(name, options.merge(:as => table_alias))
-      end
-
-      def table_exists?
-        @table_exists ||= @@tables.include?(name) || engine.connection.table_exists?(name)
-      end
+    else
+      @engine = options # Table.new('foo', engine)
+      @options = {}
     end
-  end
-end
 
-# patch for Arel 2.0.x
-module SimpleNestedSetPatchArel2
-  attr_reader :options
+    if @engine.connection
+      begin
+        require "arel/engines/sql/compilers/#{@engine.adapter_name.downcase}_compiler"
+      rescue LoadError
+        begin
+          # try to load an externally defined compiler, in case this adapter has defined the compiler on its own.
+          require "#{@engine.adapter_name.downcase}/arel_compiler"
+        rescue LoadError
+          raise "#{@engine.adapter_name} is not supported by Arel."
+        end
+      end
 
-  def initialize(name, options = Arel::Tanle.engine)
-    @options = engine if Hash === engine
-    super
+      @@tables ||= engine.connection.tables
+    end
   end
 
   def as(table_alias)
     @options ||= {}
     Arel::Table.new(name, options.merge(:as => table_alias))
+  end
+
+  def table_exists?
+    @table_exists ||= @@tables.include?(name) || engine.connection.table_exists?(name)
+  end
+end
+
+# patch for Arel 2.0.x
+#
+# we need to save the provided options in order to pass them to the new
+# Arel-Table. This way, we should be able to maintain the interface and just
+# add the "as"-funtionality
+module SimpleNestedSetPatchArel2
+  def self.included(base)
+    base.class_eval do
+      attr_reader :provided_options
+      alias_method :initialize_without_saving_options, :initialize
+      alias_method :initialize, :initialize_with_saving_options
+    end
+  end
+
+  def initialize_with_saving_options(*args) # name, engine = Arel::Table.engine
+    engine = args[1]
+    @provided_options = (engine.is_a?(Hash)) ? engine : {}
+
+    initialize_without_saving_options *args
+  end
+
+  def as(table_alias)
+    Arel::Table.new(name, provided_options.merge(:as => table_alias))
   end
 end
 
