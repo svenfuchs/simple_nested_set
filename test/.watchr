@@ -1,6 +1,8 @@
 # vim:ft=ruby
-require 'rubygems'
-require 'watchr'
+unless defined?(Watchr)
+  require 'rubygems'
+  require 'watchr'
+end
 
 all = lambda { |m|
   puts
