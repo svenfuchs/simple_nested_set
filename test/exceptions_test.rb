@@ -72,4 +72,17 @@ class NestedSetTest < Test::Unit::TestCase
       child_2_1.update_attributes!(:left_id => root.id, :right_id => root.id)
     end
   end
+
+  test "Inconsistent Move is raised if the given parent_id does not match left.parent_id" do
+    assert_raises(SimpleNestedSet::Move::Inconsistent) do
+      child_2_1.update_attributes!(:left_id => root.id, :parent_id => child_2.id)
+    end
+  end
+
+  test "Inconsistent Move is not raised if there is only a type error" do
+    assert_nothing_raised(SimpleNestedSet::Move::Inconsistent) do
+      child_2_1.update_attributes!(:left_id => child_2.id, :parent_id => "#{child_2.parent_id}")
+      child_2_1.update_attributes!(:left_id => "#{child_2.id}", :parent_id => child_2.parent_id)
+    end
+  end
 end

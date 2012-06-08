@@ -29,7 +29,7 @@ module SimpleNestedSet
         if left && parent_id && left.parent_id != parent_id
           inconsistent_move! <<-msg
             Both :left_id (#{left_id.inspect}) and :parent_id (#{parent_id.inspect}) were given but
-            left.parent_id (#{left.parent_id}) does not equal parent_id
+            left.parent_id (#{left.parent_id.inspect}) does not equal parent_id
           msg
         end
 
