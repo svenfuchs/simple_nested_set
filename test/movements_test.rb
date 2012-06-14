@@ -204,4 +204,5 @@ class NestedSetTest < Test::Unit::TestCase
     child_1.reload
     assert_equal [child_1_1, child_1_2], child_1.descendants
   end
+
 end
