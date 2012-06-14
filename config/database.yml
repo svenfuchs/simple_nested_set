@@ -9,7 +9,7 @@ postgresql:
   adapter: postgresql
   host: 127.0.0.1
   port: 5432
-  min_messages: notice
+  min_messages: warning
 
 mysql:
   <<: *defaults
