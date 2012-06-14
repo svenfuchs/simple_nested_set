@@ -1,8 +1,8 @@
 language: ruby
 before_script:
-  - mysql -e 'CREATE DATABASE sns;' # funny how inconsistent that works
-  - mysql -e "CREATE USER 'sns'@'localhost' IDENTIFIED BY 'sns';" -u root
-  - mysql -e "GRANT ALL ON sns.* TO 'sns'@'localhost';" -u root
+  # - mysql -e 'CREATE DATABASE sns;' # funny how inconsistent that works
+  # - mysql -e "CREATE USER 'sns'@'localhost' IDENTIFIED BY 'sns';" -u root
+  # - mysql -e "GRANT ALL ON sns.* TO 'sns'@'localhost';" -u root
   - psql -c "CREATE ROLE sns LOGIN PASSWORD 'sns' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;" -U postgres
   - psql -c "CREATE DATABASE sns WITH OWNER = sns;" -U postgres
 rvm:
@@ -15,4 +15,4 @@ rvm:
 env:
   - DATABASE=sqlite3
   - DATABASE=postgresql
-  - DATABASE=mysql
+  # - DATABASE=mysql
