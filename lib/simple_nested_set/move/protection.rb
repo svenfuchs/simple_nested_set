@@ -17,6 +17,7 @@ module SimpleNestedSet
       def protect_inconsistent_move!
         left  = nested_set.find(left_id)  if left_id
         right = nested_set.find(right_id) if right_id
+        p_id  = ( parent_id.to_s =~ /^\d+/ && parent_id.to_s.to_i )
 
         if left && right && (!left.right_sibling || left.right_sibling.id != right_id)
           inconsistent_move! <<-msg
@@ -26,17 +27,17 @@ module SimpleNestedSet
           msg
         end
 
-        if left && parent_id && left.parent_id != parent_id
+        if left && p_id && left.parent_id != p_id
           inconsistent_move! <<-msg
-            Both :left_id (#{left_id.inspect}) and :parent_id (#{parent_id.inspect}) were given but
+            Both :left_id (#{left_id.inspect}) and :parent_id (#{p_id.inspect}) were given but
             left.parent_id (#{left.parent_id.inspect}) does not equal parent_id
           msg
         end
 
-        if right && parent_id && right.parent_id != parent_id
+        if right && p_id && right.parent_id != p_id
           inconsistent_move! <<-msg
-            Both :right_id (#{right_id.inspect}) and :parent_id (#{parent_id.inspect}) were given but
-            right.parent_id (#{right.parent_id}) does not equal parent_id
+            Both :right_id (#{right_id.inspect}) and :parent_id (#{p_id.inspect}) were given but
+            right.parent_id (#{right.parent_id.inspect}) does not equal parent_id
           msg
         end
       end
